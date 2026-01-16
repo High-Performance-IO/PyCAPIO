@@ -25,13 +25,13 @@ int main(int argc, char **argv) {
     if (mode == "--write") {
         const std::vector<char> buffer(target_size, 'A');
 
-        const int f{libcapio_open(file_path, O_RDWR | O_CREAT)};
+        const int f{libcapio_open(file_path, O_RDWR | O_CREAT, 0644)};
         if (f >= 0) {
             const ssize_t written = libcapio_write(f, buffer.data(), buffer.size());
             std::cout << "Successfully wrote " << written << " bytes.\n";
             libcapio_close(f);
         } else {
-            std::cerr << "Error opening file for writing.\n";
+            std::cerr << "Error opening file for writing: strerror:" << strerror(errno) << "\n";
         }
 
     } else if (mode == "--read") {

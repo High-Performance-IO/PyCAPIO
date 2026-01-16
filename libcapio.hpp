@@ -49,14 +49,14 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR = ".",
 
 inline void libcapio_teardown() { exit_handler(NULL, NULL, NULL, NULL, NULL, NULL, NULL); }
 
-inline auto libcapio_open(const char *path, int flags) {
+inline auto libcapio_open(const char *path, int flags, mode_t mode = 0) {
     START_LOG(gettid(), "call(path=%s)", path);
     const long result = capio_openat(AT_FDCWD, path, flags, gettid());
     LOG("open_handler result = %d", result);
 
-    if (result == CAPIO_POSIX_SYSCALL_SKIP) {
+    if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         LOG("Delegating to glibc");
-        return open(path, flags);
+        return open(path, flags, mode);
     }
 
     if (result == CAPIO_POSIX_SYSCALL_ERRNO) {
@@ -68,7 +68,7 @@ inline auto libcapio_open(const char *path, int flags) {
 
 inline auto libcapio_read(const int fd, char *buf, const size_t size) {
     const long result = capio_read(fd, buf, size, gettid());
-    if (result == CAPIO_POSIX_SYSCALL_SKIP) {
+    if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         return read(fd, buf, size);
     }
     return result;
@@ -76,7 +76,7 @@ inline auto libcapio_read(const int fd, char *buf, const size_t size) {
 
 inline auto libcapio_write(const int fd, const char *buf, const size_t size) {
     long result = capio_write(fd, buf, size, gettid());
-    if (result == CAPIO_POSIX_SYSCALL_SKIP) {
+    if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         return write(fd, buf, size);
     }
     return result;
