@@ -1,3 +1,5 @@
 *build*
 .idea
 files_location*.txt
+venv
+*egg-info*

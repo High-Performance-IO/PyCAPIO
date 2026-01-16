@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 4.1)
+cmake_minimum_required(VERSION 3.15)
 project(libcapio)
 
 include(FetchContent)
@@ -79,7 +79,7 @@ target_compile_options(
 
 install(
         TARGETS  _pycapio
-        LIBRARY DESTINATION pycapioqueues
+        LIBRARY DESTINATION pycapio
 )
 
 ##############################
