@@ -1,0 +1,23 @@
+{
+  "name" : "libcapio_example",
+  "IO_Graph" : [
+    {
+      "name" : "writer",
+      "input_stream" : [],
+      "output_stream" : ["/tmp/test.dat"],
+      "streaming" : [
+        {
+          "name" : ["/tmp/test.dat"],
+          "committed" : "on_close:1",
+          "mode" : "no_update"
+        }
+      ]
+    },
+    {
+      "name" : "reader",
+      "input_stream" : ["/tmp/test.dat"],
+      "output_stream" : [],
+      "streaming" : []
+    }
+  ]
+}
