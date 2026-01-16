@@ -10,7 +10,8 @@ PYCAPIO_VENV_PATH=/home/marco/Desktop/py-capio
 CAPIO_SERVER_PATH=/home/marco/Desktop/capio/cmake-build-release/capio/server/capio_server
 BINARY_PATH=/home/marco/Desktop/libcapio/cmake-build-release/libcapio_example
 
-SIZE=67108864
+#SIZE=67108864
+SIZE=167108864
 
 start_time=$(date +%s%N)
 
