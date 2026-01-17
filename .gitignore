@@ -3,3 +3,5 @@
 files_location*.txt
 venv
 *egg-info*
+capio_logs
+*.log

@@ -3,6 +3,30 @@
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
+// Adapter for data typed between c++ and python code
+static ssize_t pycapio_read(int fd, pybind11::object buf, size_t size) {
+    const auto buffer                = pybind11::reinterpret_borrow<pybind11::buffer>(buf);
+    const pybind11::buffer_info info = buffer.request();
+
+    if (info.readonly) {
+        throw std::runtime_error("Buffer is read-only");
+    }
+
+    if (info.itemsize != 1) {
+        throw std::runtime_error("Expected a byte buffer");
+    }
+
+    if (info.ndim != 1) {
+        throw std::runtime_error("Expected a 1D buffer");
+    }
+
+    if (info.size < size) {
+        throw std::runtime_error("Buffer too small");
+    }
+
+    return libcapio_read(fd, static_cast<char *>(info.ptr), size);
+}
+
 PYBIND11_MODULE(_pycapio, m) {
     m.doc() = "libcapio bindings for python"; // optional module docstring
 
@@ -27,9 +51,11 @@ PYBIND11_MODULE(_pycapio, m) {
 
     m.def("pycapio_close", &libcapio_close, "Close a file", pybind11::arg("fd"));
 
-    m.def("pycapio_read", &libcapio_read, "Read from a file", pybind11::arg("fd"),
+    m.def("pycapio_read", &pycapio_read, "Read from a file", pybind11::arg("fd"),
           pybind11::arg("buf"), pybind11::arg("size"));
 
     m.def("pycapio_write", &libcapio_write, "Write to a file", pybind11::arg("fd"),
           pybind11::arg("buf"), pybind11::arg("size"));
+
+    m.def("pycapio_get_capio_dir", &get_capio_dir, "Get capio directory");
 }
