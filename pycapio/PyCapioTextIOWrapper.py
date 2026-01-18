@@ -13,40 +13,35 @@ class PyCapioTextIOWrapper:
         self.chunk_size = chunk_size
 
     def read(self, size=-1):
-        if self._rbuf:
-            if size == -1:
-                data = bytes(self._rbuf)
-                self._rbuf.clear()
-                return data + self.read()
-            else:
-                take = min(size, len(self._rbuf))
-                out = self._rbuf[:take]
-                del self._rbuf[:take]
-                return out + self.read(size - take)
 
-        if size != -1:
-            buf = bytearray(size)
-            n = pycapio_read(self.fd, buf, size)
-            if n < 0:
-                raise OSError(f"pycapio_read() failed, returned {n}")
-            return buf[:n]
+        if size == 0:
+            return b''
 
-        buf = bytearray(self.chunk_size)
-        total = 0
+        out = bytearray()
+
 
         while True:
-            if total == len(buf):
-                log(f"Expanding buffer from {len(buf)} to {len(buf) * 2} bytes")
-                buf.extend(b'\x00' * len(buf))
+            if self._rbuf:
+                if size < 0:
+                    out += self._rbuf
+                    self._rbuf.clear()
+                else:
+                    take = min(size - len(out), len(self._rbuf))
+                    out += self._rbuf[:take]
+                    del self._rbuf[:take]
 
-            n = pycapio_read(self.fd, buf[total:], len(buf) - total)
+                if size >= 0 and len(out) == size:
+                    break
+            chunk = bytearray(self.chunk_size)
+            n = pycapio_read(self.fd, chunk, self.chunk_size)
 
-            if n != self.chunk_size:
+            if n <= 0:
                 break
 
-            total += n
+            self._rbuf += chunk[:n]
 
-        return buf[:total]
+        return out
+
 
     def readline(self, limit=-1):
         if limit == 0:
@@ -132,6 +127,7 @@ class PyCapioTextIOWrapper:
 
     def close(self):
         pycapio_close(self.fd)
+        log(f"Closed file descriptor: {self.fd}")
         self.closed = True
 
     def fileno(self):

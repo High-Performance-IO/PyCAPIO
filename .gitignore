@@ -5,3 +5,4 @@ venv
 *egg-info*
 capio_logs
 *.log
+**/__pycache__/**
