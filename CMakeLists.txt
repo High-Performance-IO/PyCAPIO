@@ -36,7 +36,7 @@ ExternalProject_Add(
         capio
         PREFIX ${CAPIO_PREFIX}
         GIT_REPOSITORY https://github.com/High-Performance-IO/capio.git
-        GIT_TAG        streaming-bugfixes
+        GIT_TAG streaming-bugfixes
 
         # Patch to remove specific subdirectories
         PATCH_COMMAND sed -i "/add_subdirectory(capio\\/posix)/d" <SOURCE_DIR>/CMakeLists.txt
@@ -78,7 +78,7 @@ target_compile_options(
 )
 
 install(
-        TARGETS  _pycapio
+        TARGETS _pycapio
         LIBRARY DESTINATION pycapio
 )
 
@@ -90,24 +90,49 @@ add_executable(libcapio_example examples/libcapio_example.cpp)
 
 add_dependencies(libcapio_example capio)
 
-# 3. Link libraries
-# Removed pybind11 references. Added capio_headers.
 target_link_libraries(
         libcapio_example
         PRIVATE
         capio_headers
 )
 
-# 4. Target compile options (unchanged)
 target_compile_options(
         libcapio_example
         PRIVATE
         $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
 )
 
-# 5. Install (Updated)
-# For executables, use RUNTIME DESTINATION instead of LIBRARY
 install(
         TARGETS libcapio_example
+        RUNTIME DESTINATION bin
+)
+
+
+##############################
+# CapioTextIOWrapper.cpp test target
+#############################
+
+add_executable(test_CapioTextIOWrapper tests/CapioTextIOWrapper.cpp)
+add_dependencies(test_CapioTextIOWrapper capio)
+
+target_include_directories(test_CapioTextIOWrapper PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_dependencies(test_CapioTextIOWrapper capio)
+
+target_link_libraries(
+        test_CapioTextIOWrapper
+        PRIVATE
+        capio_headers
+)
+
+target_compile_options(
+        test_CapioTextIOWrapper
+        PRIVATE
+        $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
+)
+
+install(
+        TARGETS test_CapioTextIOWrapper
         RUNTIME DESTINATION bin
 )

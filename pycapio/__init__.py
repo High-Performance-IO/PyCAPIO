@@ -2,7 +2,6 @@ import _io
 import builtins
 import io
 from os import path
-from .PyCapioTextIOWrapper import PyCapioTextIOWrapper
 from ._pycapio import *
 from .logger import log
 
@@ -42,7 +41,7 @@ def open_proxy(*args, **kwargs):
 
         fd = pycapio_open(target_path, pycapio_flags, 777)
         log(f"Opened file descriptor: {fd}")
-        return PyCapioTextIOWrapper(fd, target_path)
+        return PyCapioTextIOWrapper(fd)
 
     return OriginalOpen(*args, **kwargs)
 

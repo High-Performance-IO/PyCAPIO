@@ -51,7 +51,8 @@ inline void libcapio_teardown() { exit_handler(NULL, NULL, NULL, NULL, NULL, NUL
 
 inline auto libcapio_open(const char *path, int flags, mode_t mode = 0) {
     START_LOG(gettid(), "call(path=%s)", path);
-    const long result = capio_openat(AT_FDCWD, path, flags, gettid());
+    long result;
+    openat_handler(AT_FDCWD, reinterpret_cast<long>(path), flags, NULL, NULL, NULL, &result);
     LOG("open_handler result = %d", result);
 
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
@@ -67,7 +68,8 @@ inline auto libcapio_open(const char *path, int flags, mode_t mode = 0) {
 }
 
 inline auto libcapio_read(const int fd, char *buf, const size_t size) {
-    const long result = capio_read(fd, buf, size, gettid());
+    long result;
+    read_handler(fd, reinterpret_cast<long>(buf), size, NULL, NULL, NULL, &result);
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         return read(fd, buf, size);
     }
@@ -75,7 +77,8 @@ inline auto libcapio_read(const int fd, char *buf, const size_t size) {
 }
 
 inline auto libcapio_write(const int fd, const char *buf, const size_t size) {
-    long result = capio_write(fd, buf, size, gettid());
+    long result;
+    write_handler(fd, reinterpret_cast<long>(buf), size, NULL, NULL, NULL, &result);
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         return write(fd, buf, size);
     }
