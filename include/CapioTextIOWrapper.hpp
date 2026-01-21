@@ -10,7 +10,8 @@ class CapioTextIOWrapper {
     bool _closed = false;
 
   public:
-    CapioTextIOWrapper(const int fd, const uint64_t chunk_size = 4096)
+    // Default read of 16KB
+    CapioTextIOWrapper(const int fd, const uint64_t chunk_size = 16 * 1024)
         : _file_descriptor(fd), _chunk_size(chunk_size) {}
 
     auto write(const std::string &text) const {
