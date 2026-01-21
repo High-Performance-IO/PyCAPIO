@@ -45,13 +45,13 @@ class CapioTextIOWrapper {
             return out_buffer;
         }
 
-        size_t cnt = 0;
+        long long cnt = 0;
         std::string tmp("\0", _chunk_size);
         do {
             cnt = libcapio_read(this->_file_descriptor, tmp.data(), _chunk_size);
             out_buffer.append(tmp, 0, cnt);
             read_size += cnt;
-        } while (cnt == _chunk_size);
+        } while (cnt > 0);
 
         out_buffer.resize(read_size);
         return out_buffer;

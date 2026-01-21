@@ -1,0 +1,22 @@
+{
+  "name" : "CAPIO",
+  "IO_Graph" : [
+    {
+      "name" : "producer",
+      "input_stream" : [],
+      "output_stream" : ["/tmp/sample_streaming.dat"],
+      "streaming": [
+        {
+          "name" : ["/tmp/sample_streaming.dat"],
+          "committed" : "on_close:1",
+          "mode" : "no_update"
+        }
+      ]
+    },
+    {
+      "name" : "consumer",
+      "input_stream" : ["/tmp/sample_streaming.dat"],
+      "output_stream" : []
+    }
+  ]
+}

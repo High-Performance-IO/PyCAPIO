@@ -119,6 +119,13 @@ void test_read_1gb() {
     CapioTextIOWrapper f(fd);
     std::string data = f.read();
 
+    if (data.size() != 1024 * 1024 * 1024) {
+        std::cout << std::endl
+                  << "Error: read size is " << data.size() << " instead of " << 1024 * 1024 * 1024
+                  << std::endl;
+        assert(data.size() == 1024 * 1024 * 1024);
+    }
+
     for (char c : data) {
         assert(c == '1');
     }
