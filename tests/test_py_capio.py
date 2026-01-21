@@ -24,19 +24,19 @@ def test_write():
 
 def test_read_with_size():
     with open(path, "r") as f:
-        content = f.read(11).decode("utf-8")
+        content = f.read(11)
         print("Partial read content:", repr(content))
         assert content == first_line
-        content = f.read(12).decode("utf-8")
+        content = f.read(12)
         print("Partial read content:", repr(content))
         assert content == second_line
-        content = f.read(11).decode("utf-8")
+        content = f.read(11)
         print("Partial read content:", repr(content))
         assert content == third_line
 
 def test_read():
     with open(path, "r", encoding="utf-8") as f:
-        content = f.read().decode("utf-8")
+        content = f.read()
         print(f"Length of read content: {len(content)}")
         assert content == f"{first_line}{second_line}{third_line}"
         print("Full read content:", repr(content))
@@ -46,7 +46,7 @@ def test_readlines():
     with open(path, "r", encoding="utf-8") as f:
         lines = []
         while True:
-            line = f.readline().decode("utf-8")
+            line = f.readline()
             if not line:
                 break
             lines.append(line)
@@ -60,6 +60,6 @@ def test_write_1gb():
 
 def test_read_1gb():
     with open(path1, "rb") as f:
-        b = f.read()
-    for byte in b:
-        assert byte == 1
+        data = f.read()
+    for char in data:
+        assert char == "1"
