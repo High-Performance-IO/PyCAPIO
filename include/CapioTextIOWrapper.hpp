@@ -27,26 +27,32 @@ class CapioTextIOWrapper {
         std::string out_buffer;
         size_t read_size = 0;
 
+        if (size == 0) {
+            return "";
+        }
+
         out_buffer += _buffer;
         read_size += _buffer.size();
         _buffer.clear();
 
-        if (size == -1) {
-            const auto read_chunk = std::unique_ptr<char[]>(new char[_chunk_size]);
-            size_t cnt;
-            do {
-                cnt = libcapio_read(_file_descriptor, read_chunk.get(), _chunk_size);
-                out_buffer.append(read_chunk.get(), cnt);
-                read_size += cnt;
-            } while (cnt > 0);
-
+        if (size != -1) {
+            out_buffer.resize(size);
+            const auto result =
+                libcapio_read(this->_file_descriptor, out_buffer.data() + read_size, size);
+            read_size += result;
             out_buffer.resize(read_size);
             return out_buffer;
         }
 
-        out_buffer.resize(size);
-        libcapio_read(this->_file_descriptor, out_buffer.data(), size);
+        size_t cnt = 0;
+        std::string tmp("\0", _chunk_size);
+        do {
+            cnt = libcapio_read(this->_file_descriptor, tmp.data(), _chunk_size);
+            out_buffer.append(tmp, 0, cnt);
+            read_size += cnt;
+        } while (cnt == _chunk_size);
 
+        out_buffer.resize(read_size);
         return out_buffer;
     }
 

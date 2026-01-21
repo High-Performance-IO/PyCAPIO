@@ -41,6 +41,7 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR = ".",
     std::cout << "LIBCAPIO | CAPIO_APP_NAME: " << getenv("CAPIO_APP_NAME") << std::endl;
     std::cout << "LIBCAPIO | CAPIO_WORKFLOW_NAME: " << getenv("CAPIO_WORKFLOW_NAME") << std::endl;
 
+    init_client(gettid());
     init_filesystem();
     initialize_new_thread();
 

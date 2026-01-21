@@ -91,10 +91,10 @@ void test_write_1gb() {
 
     CapioTextIOWrapper f(fd);
 
-    const size_t chunk = 1024 * 1024;
+    constexpr size_t chunk = 1024;
     std::string buf(chunk, '1');
 
-    for (size_t i = 0; i < 1024; ++i) {
+    for (size_t i = 0; i < 1024 * 1024; ++i) {
         f.write(buf);
     }
 
