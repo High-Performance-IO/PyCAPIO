@@ -9,7 +9,7 @@
 
 #include "libcapio.hpp"
 
-#include "include/CapioTextIOWrapper.hpp"
+#include "include/_CapioIOWrapper.hpp"
 
 static const char *path  = "/tmp/sample.dat";
 static const char *path1 = "/tmp/sample1.dat";
@@ -23,7 +23,7 @@ void test_write() {
     int fd = libcapio_open(path, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     assert(fd >= 0);
 
-    CapioTextIOWrapper f(fd);
+    _CapioIOWrapper f(fd);
 
     f.write(first_line);
     f.write(second_line);
@@ -38,7 +38,7 @@ void test_read_with_size() {
     int fd = libcapio_open(path, O_RDONLY);
     assert(fd >= 0);
 
-    CapioTextIOWrapper f(fd);
+    _CapioIOWrapper f(fd);
 
     std::string content;
 
@@ -60,7 +60,7 @@ void test_read() {
     int fd = libcapio_open(path, O_RDONLY);
     assert(fd >= 0);
 
-    CapioTextIOWrapper f(fd);
+    _CapioIOWrapper f(fd);
     std::string content = f.read();
 
     assert(content == first_line + second_line + third_line);
@@ -74,7 +74,7 @@ void test_readlines() {
     int fd = libcapio_open(path, O_RDONLY);
     assert(fd >= 0);
 
-    CapioTextIOWrapper f(fd);
+    _CapioIOWrapper f(fd);
     std::vector<std::string> lines;
 
     while (true) {
@@ -98,7 +98,7 @@ void test_write_1gb() {
     int fd = libcapio_open(path1, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     assert(fd >= 0);
 
-    CapioTextIOWrapper f(fd);
+    _CapioIOWrapper f(fd);
 
     constexpr size_t chunk = 1024;
     std::string buf(chunk, '1');
@@ -116,7 +116,7 @@ void test_read_1gb() {
     int fd = libcapio_open(path1, O_RDONLY);
     assert(fd >= 0);
 
-    CapioTextIOWrapper f(fd);
+    _CapioIOWrapper f(fd);
     std::string data = f.read();
 
     if (data.size() != 1024 * 1024 * 1024) {

@@ -2,7 +2,8 @@
 #define LIBCAPIO_PYCAPIOTEXTIOWRAPPER_HPP
 #include <cstdint>
 
-class CapioTextIOWrapper {
+// TODO: make this class a template
+class _CapioIOWrapper {
 
     const int _file_descriptor = -1;
     const uint64_t _chunk_size;
@@ -11,7 +12,7 @@ class CapioTextIOWrapper {
 
   public:
     // Default read of 16KB
-    CapioTextIOWrapper(const int fd, const uint64_t chunk_size = 16 * 1024)
+    _CapioIOWrapper(const int fd, const uint64_t chunk_size = 16 * 1024)
         : _file_descriptor(fd), _chunk_size(chunk_size) {}
 
     auto write(const std::string &text) const {
@@ -104,6 +105,14 @@ class CapioTextIOWrapper {
             _closed = true;
         }
     }
+};
+
+class CapioBinaryIOWrapper final : public _CapioIOWrapper {
+    using _CapioIOWrapper::_CapioIOWrapper;
+};
+
+class CapioTextIOWrapper final : public _CapioIOWrapper {
+    using _CapioIOWrapper::_CapioIOWrapper;
 };
 
 #endif // LIBCAPIO_PYCAPIOTEXTIOWRAPPER_HPP
