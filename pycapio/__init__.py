@@ -1,8 +1,8 @@
 import _io
+import atexit
 import builtins
 import io
 from os import path
-import atexit
 
 from ._pycapio import *
 
@@ -24,10 +24,8 @@ OriginalBinaryIOWrapper = _io.BufferedReader
 OriginalPythonBinaryIOWrapper = io.BufferedReader
 OriginalOpen = builtins.open
 
-
 CAPIO_DIR = pycapio_get_capio_dir()
 
-atexit.register(pycapio_teardown)
 
 def open_proxy(*args, **kwargs):
     target_path = path.abspath(args[0])
@@ -48,10 +46,8 @@ def open_proxy(*args, **kwargs):
         pycapio_flags |= FILE_MODES["O_RDWR"]
 
     fd = pycapio_open(target_path, pycapio_flags, 777)
-    if "b" not in flags:
-        return PyCapioTextIOWrapper(fd)
-    else:
-        return PyCapioBinaryIOWrapper(fd)
+
+    return PyCapioBinaryIOWrapper(fd) if "b" in flags else PyCapioTextIOWrapper(fd)
 
 
 def patch():
@@ -74,4 +70,5 @@ def unpatch():
     builtins.open = OriginalOpen
 
 
+atexit.register(unpatch)
 patch()

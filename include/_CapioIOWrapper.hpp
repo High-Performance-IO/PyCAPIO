@@ -109,10 +109,14 @@ class _CapioIOWrapper {
 
 class CapioBinaryIOWrapper final : public _CapioIOWrapper {
     using _CapioIOWrapper::_CapioIOWrapper;
+public:
+    ~CapioBinaryIOWrapper() { close(); }
 };
 
 class CapioTextIOWrapper final : public _CapioIOWrapper {
     using _CapioIOWrapper::_CapioIOWrapper;
+public:
+    ~CapioTextIOWrapper() { close(); }
 };
 
 #endif // LIBCAPIO_PYCAPIOTEXTIOWRAPPER_HPP

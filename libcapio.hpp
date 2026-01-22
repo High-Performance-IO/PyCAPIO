@@ -21,9 +21,15 @@ inline bool syscall_no_intercept_flag;
 
 #include "handlers.hpp"
 
+static bool libcapio_initialized = false;
+
 inline void libcapio_init(const std::filesystem::path &CAPIO_DIR = ".",
                           const std::string &CAPIO_APP_NAME      = CAPIO_DEFAULT_APP_NAME,
                           const std::string &CAPIO_WORKFLOW_NAME = CAPIO_DEFAULT_WORKFLOW_NAME) {
+
+    if (libcapio_initialized) {
+        return;
+    }
 
     if (getenv("CAPIO_APP_NAME") == nullptr) {
         setenv("CAPIO_APP_NAME", CAPIO_APP_NAME.c_str(), 1);
@@ -45,10 +51,17 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR = ".",
     init_filesystem();
     initialize_new_thread();
 
+    libcapio_initialized = true;
+
     START_SYSCALL_LOGGING();
 }
 
-inline void libcapio_teardown() { exit_handler(NULL, NULL, NULL, NULL, NULL, NULL, NULL); }
+inline void libcapio_teardown() {
+    if (libcapio_initialized) {
+        exit_handler(NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+        libcapio_initialized = false;
+    }
+}
 
 inline auto libcapio_open(const char *path, int flags, mode_t mode = 0) {
     START_LOG(gettid(), "call(path=%s)", path);

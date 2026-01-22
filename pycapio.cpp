@@ -19,34 +19,13 @@ PYBIND11_MODULE(_pycapio, m) {
 
     m.attr("FILE_MODES") = file_modes;
 
-    // Ensure this is defined outside the block or as a static variable
-    bool module_initialized = false;
+    m.add_object("_cleanup", pybind11::capsule([]() { libcapio_teardown(); }));
 
-    m.def(
-        "pycapio_init",
-        [&](const std::string &capio_dir, const std::string &app_name,
-            const std::string &workflow_name) {
-            if (!module_initialized) {
-                libcapio_init(capio_dir, app_name, workflow_name);
-                module_initialized = true;
-            }
-        },
-        "Initialize libcapio", pybind11::arg("CAPIO_DIR") = ".",
-        pybind11::arg("CAPIO_APP_NAME")      = CAPIO_DEFAULT_APP_NAME,
-        pybind11::arg("CAPIO_WORKFLOW_NAME") = CAPIO_DEFAULT_WORKFLOW_NAME);
-
-    m.def(
-        "pycapio_teardown",
-        [&]() {
-            if (module_initialized) {
-                libcapio_teardown();
-                module_initialized = false;
-            }
-        },
-        "Teardown libcapio");
-
+    m.def("pycapio_init", &libcapio_init, "Initialize libcapio", pybind11::arg("CAPIO_DIR") = ".",
+          pybind11::arg("CAPIO_APP_NAME")      = CAPIO_DEFAULT_APP_NAME,
+          pybind11::arg("CAPIO_WORKFLOW_NAME") = CAPIO_DEFAULT_WORKFLOW_NAME);
+    m.def("pycapio_teardown", &libcapio_teardown, "Teardown libcapio");
     m.def("pycapio_get_capio_dir", &get_capio_dir, "Get capio directory");
-
     m.def("pycapio_open", &libcapio_open, "Open a file", pybind11::arg("path"),
           pybind11::arg("flags"), pybind11::arg("mode") = 0);
 
@@ -61,34 +40,20 @@ PYBIND11_MODULE(_pycapio, m) {
         .def("writelines", &CapioTextIOWrapper::writelines, pybind11::arg("lines"))
         .def("fileno", &CapioTextIOWrapper::fileno)
         .def("close", &CapioTextIOWrapper::close)
-        .def("__enter__", [](CapioTextIOWrapper &self) -> CapioTextIOWrapper & { return self; })
-        .def("__exit__",
-             [](CapioTextIOWrapper &self, pybind11::object, pybind11::object, pybind11::object) {
-                 self.close();
-                 return false;
-             })
-        .def("__del__", [&]() {
-            if (module_initialized) {
-                libcapio_teardown();
-                module_initialized = false;
-            }
-        });
+        .def("__enter__", [](CapioTextIOWrapper &self) { return self; })
+        .def("__exit__", [](CapioTextIOWrapper &self) { self.close(); });
 
     pybind11::class_<CapioBinaryIOWrapper>(m, "PyCapioBinaryIOWrapper")
-
         .def(pybind11::init<int, uint64_t>(), pybind11::arg("fd"),
              pybind11::arg("chunk_size") = 16 * 1024)
-
         .def(
             "read",
             [](CapioBinaryIOWrapper &self, const int64_t size) {
                 return pybind11::bytes(self.read(size));
             },
             pybind11::arg("size") = -1)
-
         .def("readline",
              [](CapioBinaryIOWrapper &self) { return pybind11::bytes(self.readline()); })
-
         .def("readlines",
              [](CapioBinaryIOWrapper &self) {
                  std::vector<std::string> lines = self.readlines();
@@ -98,22 +63,12 @@ PYBIND11_MODULE(_pycapio, m) {
                  }
                  return py_lines;
              })
-
         .def("write", [](CapioBinaryIOWrapper &self,
                          const pybind11::bytes &b) { return self.write(std::string(b)); })
-
         .def("writelines", &CapioBinaryIOWrapper::writelines)
-
         .def("fileno", &CapioBinaryIOWrapper::fileno)
         .def("close", &CapioBinaryIOWrapper::close)
         .def("closed", [](CapioBinaryIOWrapper &self) { self.close(); })
         .def("__enter__", [](CapioBinaryIOWrapper &self) { return &self; })
-        .def("__exit__", [](CapioBinaryIOWrapper &self, pybind11::args) { self.close(); })
-        .def("__del__", [&]() {
-            if (module_initialized) {
-                libcapio_teardown();
-                module_initialized = false;
-            }
-        });
-    ;
+        .def("__exit__", [](CapioBinaryIOWrapper &self, pybind11::args) { self.close(); });
 }
