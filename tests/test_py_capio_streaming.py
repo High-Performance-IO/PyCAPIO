@@ -13,13 +13,11 @@ def test_streaming():
 
     def test_write_1gb():
         os.environ["CAPIO_APP_NAME"] = "producer"
-        import pycapio
         with open(file_path, "wb") as f:
             f.write(b"1" * 1024 * 1024 * 1024)
 
     def test_read_1gb():
         os.environ["CAPIO_APP_NAME"] = "consumer"
-        import pycapio
         with open(file_path, "r") as f:
             data = f.read()
         for char in data:

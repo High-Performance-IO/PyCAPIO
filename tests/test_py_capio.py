@@ -4,8 +4,6 @@ os.environ["CAPIO_DIR"] = "/tmp"
 os.environ["DEBUG"] = "on"
 os.environ["CAPIO_LOG_LEVEL"] = "-1"
 
-import pycapio
-
 path = "/tmp/sample.dat"
 path1 = "/tmp/sample1.dat"
 
