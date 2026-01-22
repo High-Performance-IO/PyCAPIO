@@ -86,7 +86,7 @@ install(
 # Libcapio.cpp example target
 #############################
 
-add_executable(libcapio_example examples/libcapio_example.cpp)
+add_executable(libcapio_example examples/cpp/libcapio_example.cpp)
 
 add_dependencies(libcapio_example capio)
 
