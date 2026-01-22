@@ -19,6 +19,9 @@ PYBIND11_MODULE(_pycapio, m) {
 
     m.attr("FILE_MODES") = file_modes;
 
+    m.attr("CAPIO_DEFAULT_APP_NAME") = CAPIO_DEFAULT_APP_NAME;
+    m.attr("CAPIO_DEFAULT_WORKFLOW_NAME") = CAPIO_DEFAULT_WORKFLOW_NAME;
+
     m.add_object("_cleanup", pybind11::capsule([]() { libcapio_teardown(); }));
 
     m.def("pycapio_init", &libcapio_init, "Initialize libcapio", pybind11::arg("CAPIO_DIR") = ".",

@@ -1,8 +1,10 @@
 import os
 from functools import wraps
 
+from .._pycapio import CAPIO_DEFAULT_APP_NAME, CAPIO_DEFAULT_WORKFLOW_NAME
 
-def CapioContext(capio_dir=".", capio_app_name="default_app", capio_workflow_name="CAPIO"):
+
+def CapioContext(capio_dir=".", capio_app_name=CAPIO_DEFAULT_APP_NAME, capio_workflow_name=CAPIO_DEFAULT_WORKFLOW_NAME):
     def _CapioContext(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
