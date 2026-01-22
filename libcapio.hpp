@@ -43,13 +43,6 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR = ".",
         setenv("CAPIO_WORKFLOW_NAME", CAPIO_WORKFLOW_NAME.c_str(), 1);
     }
 
-    std::cout << "[[LIBCAPIO]] CAPIO_DIR: " << getenv("CAPIO_DIR") << std::endl;
-    std::cout << "[[LIBCAPIO]] CAPIO_APP_NAME: " << getenv("CAPIO_APP_NAME") << std::endl;
-    std::cout << "[[LIBCAPIO]] CAPIO_WORKFLOW_NAME: " << getenv("CAPIO_WORKFLOW_NAME") << std::endl;
-    std::cout << "[[LIBCAPIO]] PID - TID: " << std::to_string(getpid()) << " - "
-              << std::to_string(gettid()) << std::endl
-              << std::endl;
-
     init_client(gettid());
     init_filesystem();
     initialize_new_thread();
@@ -57,6 +50,17 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR = ".",
     libcapio_initialized = true;
 
     START_SYSCALL_LOGGING();
+
+    if (const auto silent = std::getenv("SILENT");
+        silent != nullptr && std::string(silent) == "OFF") {
+        std::cout << "[[LIBCAPIO]] CAPIO_DIR: " << getenv("CAPIO_DIR") << std::endl;
+        std::cout << "[[LIBCAPIO]] CAPIO_APP_NAME: " << getenv("CAPIO_APP_NAME") << std::endl;
+        std::cout << "[[LIBCAPIO]] CAPIO_WORKFLOW_NAME: " << getenv("CAPIO_WORKFLOW_NAME")
+                  << std::endl;
+        std::cout << "[[LIBCAPIO]] PID - TID: " << std::to_string(getpid()) << " - "
+                  << std::to_string(gettid()) << std::endl
+                  << std::endl;
+    }
 }
 
 inline void libcapio_teardown() {

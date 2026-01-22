@@ -8,12 +8,12 @@ file_path = "/tmp/sample_streaming.dat"
 def test_streaming():
     from  pycapio.context import CapioContext
 
-    @CapioContext(capio_app_name="producer", capio_dir="/tmp", capio_workflow_name="CAPIO")
+    @CapioContext(capio_app_name="producer", capio_dir="/tmp", capio_workflow_name="CAPIO", silent=False)
     def test_write_1gb():
         with open(file_path, "w") as f:
             f.write("1" * 1024 * 1024 * 1024)
 
-    @CapioContext(capio_app_name="consumer", capio_dir="/tmp", capio_workflow_name="CAPIO")
+    @CapioContext(capio_app_name="consumer", capio_dir="/tmp", capio_workflow_name="CAPIO", silent=False)
     def test_read_1gb():
         with open(file_path, "r") as f:
             data = f.read()
