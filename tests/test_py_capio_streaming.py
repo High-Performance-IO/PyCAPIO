@@ -3,21 +3,18 @@ import multiprocessing
 import time
 import sys
 
-os.environ["CAPIO_DIR"] = "/tmp"
-os.environ["DEBUG"] = "on"
-os.environ["CAPIO_LOG_LEVEL"] = "-1"
-
 file_path = "/tmp/sample_streaming.dat"
 
 def test_streaming():
+    from  pycapio.context import CapioContext
 
+    @CapioContext(capio_app_name="producer", capio_dir="/tmp", capio_workflow_name="CAPIO")
     def test_write_1gb():
-        os.environ["CAPIO_APP_NAME"] = "producer"
-        with open(file_path, "wb") as f:
-            f.write(b"1" * 1024 * 1024 * 1024)
+        with open(file_path, "w") as f:
+            f.write("1" * 1024 * 1024 * 1024)
 
+    @CapioContext(capio_app_name="consumer", capio_dir="/tmp", capio_workflow_name="CAPIO")
     def test_read_1gb():
-        os.environ["CAPIO_APP_NAME"] = "consumer"
         with open(file_path, "r") as f:
             data = f.read()
         for char in data:
@@ -25,9 +22,7 @@ def test_streaming():
                 print(f"found wrong char: {char}")
                 assert char == "1"
         if (len(data) != 1024 * 1024 * 1024):
-            print(
-                f"read {len(data)} bytes instead of 1GB!"
-            )
+            print(f"read {len(data)} bytes instead of 1GB!")
         assert len(data) == 1024 * 1024 * 1024
 
     consumer = multiprocessing.Process(target=test_read_1gb)
