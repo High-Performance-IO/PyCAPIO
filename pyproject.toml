@@ -2,19 +2,18 @@
 name = "pycapio"
 version = "0.0.1"
 description = "Python interface library for the libcapio library"
-authors = [{name="Marco Edoardo Santimaria", email="marcoedoardo.santimaria@unito.it"}]
-dynamic = ["dependencies"]
+authors = [{ name = "Marco Edoardo Santimaria", email = "marcoedoardo.santimaria@unito.it" }]
+
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.8"
 
 [build-system]
 requires = [
     "scikit-build-core>=0.8",
-    "pybind11>=2.11.0",
+    "pybind11>=3.0.1",
 ]
 build-backend = "scikit_build_core.build"
-
-dependencies = []
 
 [project.urls]
 Homepage = "https://capio.hpc4ai.it"
