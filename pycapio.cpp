@@ -4,6 +4,7 @@
 #include <pybind11/stl/filesystem.h>
 
 #include "include/_CapioIOWrapper.hpp"
+#include "include/_CapioScandirIteratorWrapper.hpp"
 
 PYBIND11_MODULE(_pycapio, m) {
 

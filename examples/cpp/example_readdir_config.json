@@ -1,0 +1,29 @@
+{
+  "name" : "libcapio_readdir_example",
+  "IO_Graph" : [
+    {
+      "name" : "producer",
+      "input_stream" : [],
+      "output_stream" : ["/tmp/*"],
+      "streaming" : [
+        {
+          "dirname" : ["/tmp"],
+          "committed" : "on_close",
+          "n_files" : 4,
+          "mode" : "no_update"
+        },
+        {
+          "name" : ["/tmp/*"],
+          "committed" : "on_close",
+          "mode" : "no_update"
+        }
+      ]
+    },
+    {
+      "name" : "reader",
+      "input_stream" : ["/tmp"],
+      "output_stream" : [],
+      "streaming" : []
+    }
+  ]
+}
