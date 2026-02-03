@@ -36,7 +36,7 @@ ExternalProject_Add(
         capio
         PREFIX ${CAPIO_PREFIX}
         GIT_REPOSITORY https://github.com/High-Performance-IO/capio.git
-        GIT_TAG streaming-bugfixes
+        GIT_TAG master
 
         # Patch to remove specific subdirectories
         PATCH_COMMAND sed -i "/add_subdirectory(capio\\/posix)/d" <SOURCE_DIR>/CMakeLists.txt
@@ -83,29 +83,36 @@ install(
 )
 
 ##############################
-# Libcapio.cpp example target
+# Libcapio example targets
 #############################
 
-add_executable(libcapio_example examples/cpp/libcapio_example.cpp)
-
-add_dependencies(libcapio_example capio)
-
-target_link_libraries(
-        libcapio_example
-        PRIVATE
-        capio_headers
+file(GLOB example_sources
+        CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/examples/cpp/*.cpp"
 )
 
-target_compile_options(
-        libcapio_example
-        PRIVATE
-        $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
-)
+foreach (example_src ${example_sources})
+    get_filename_component(example_name ${example_src} NAME_WE)
+    add_executable(${example_name} ${example_src})
+    add_dependencies(${example_name} capio)
 
-install(
-        TARGETS libcapio_example
-        RUNTIME DESTINATION bin
-)
+    target_link_libraries(
+            ${example_name}
+            PRIVATE
+            capio_headers
+    )
+
+    target_compile_options(
+            ${example_name}
+            PRIVATE
+            $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
+    )
+
+    install(
+            TARGETS ${example_name}
+            RUNTIME DESTINATION bin
+    )
+endforeach ()
 
 
 ##############################

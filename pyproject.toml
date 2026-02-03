@@ -7,6 +7,10 @@ authors = [{ name = "Marco Edoardo Santimaria", email = "marcoedoardo.santimaria
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.8"
+dependencies = [
+    "py_capio_cl"
+]
+
 
 [build-system]
 requires = [

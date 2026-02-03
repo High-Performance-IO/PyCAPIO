@@ -1,13 +1,15 @@
-import os
 import multiprocessing
-import time
+import os
 import sys
+import time
 
 file_path = "/tmp/sample_streaming.dat"
 
 def test_streaming():
-    from  pycapio.context import CapioContext
+    from pycapio.context import CapioContext
+    from py_capio_cl.decorators import CapioCLRule
 
+    @CapioCLRule(path=file_path, committed="on_close", fire="no_update")
     @CapioContext(capio_app_name="producer", capio_dir="/tmp", capio_workflow_name="CAPIO", silent=False)
     def test_write_1gb():
         with open(file_path, "w") as f:
@@ -37,6 +39,7 @@ def test_streaming():
     end_time = time.perf_counter()
     elapsed = end_time - start_time
     print(f"Total time elapsed: {elapsed:.4f} seconds")
+
 
 if __name__ == "__main__":
 

@@ -11,6 +11,7 @@ inline bool syscall_no_intercept_flag;
 #define CAPIO_VERSION ""
 
 #include <array>
+#include <dirent.h>
 #include <string>
 
 #include "common/syscall.hpp"
@@ -109,6 +110,18 @@ inline auto libcapio_write(const int fd, const char *buf, const size_t size) {
 inline auto libcapio_close(const int fd) {
     long result;
     close_handler(fd, NULL, NULL, NULL, NULL, NULL, &result);
+    return result;
+}
+
+inline auto libcapio_readdir(const int fd, dirent64 *entry) {
+    long result;
+    getdents_handler_impl(fd, reinterpret_cast<long>(entry), sizeof(linux_dirent64), &result, true);
+
+    if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
+        throw std::runtime_error(
+            "ERROR: libcapio readdir on non CAPIO directory not yet supported");
+    }
+
     return result;
 }
 
