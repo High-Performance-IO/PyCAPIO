@@ -2,6 +2,7 @@ import _io
 import atexit
 import builtins
 import io
+import os
 from os import path
 
 from .._pycapio import *
@@ -14,6 +15,7 @@ __all__ = [name for name in globals() if not name.startswith("_")] + [
     "OriginalPythonTextIOWrapper",
     "OriginalBinaryIOWrapper",
     "OriginalPythonBinaryIOWrapper",
+    "OriginalScandir",
 ]
 
 pycapio_init()
@@ -23,6 +25,7 @@ OriginalPythonTextIOWrapper = io.TextIOWrapper
 OriginalBinaryIOWrapper = _io.BufferedReader
 OriginalPythonBinaryIOWrapper = io.BufferedReader
 OriginalOpen = builtins.open
+OriginalScandir = os.scandir
 
 CAPIO_DIR = pycapio_get_capio_dir()
 
@@ -57,6 +60,8 @@ def patch():
     _io.TextIOWrapper = PyCapioTextIOWrapper
     _io.BufferedReader = PyCapioBinaryIOWrapper
 
+    os.scandir = PyCapioScandirWrapper
+
     builtins.open = open_proxy
 
 
@@ -66,6 +71,8 @@ def unpatch():
 
     _io.TextIOWrapper = OriginalTextIOWrapper
     _io.BufferedReader = OriginalBinaryIOWrapper
+
+    os.scandir = OriginalScandir
 
     builtins.open = OriginalOpen
 

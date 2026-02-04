@@ -3,19 +3,19 @@ import os
 import sys
 import time
 
-file_path = "/tmp/sample_streaming.dat"
+file_path = "/tmp/test.dat"
 
 def test_streaming():
     from pycapio.context import CapioContext
     from py_capio_cl.decorators import CapioCLRule
 
     @CapioCLRule(path=file_path, committed="on_close", fire="no_update")
-    @CapioContext(capio_app_name="producer", capio_dir="/tmp", capio_workflow_name="CAPIO", silent=False)
+    @CapioContext(capio_app_name="writer", capio_dir="/tmp", capio_workflow_name="libcapio_example", silent=False)
     def test_write_1gb():
         with open(file_path, "w") as f:
             f.write("1" * 1024 * 1024 * 1024)
 
-    @CapioContext(capio_app_name="consumer", capio_dir="/tmp", capio_workflow_name="CAPIO", silent=False)
+    @CapioContext(capio_app_name="reader", capio_dir="/tmp", capio_workflow_name="libcapio_example", silent=False)
     def test_read_1gb():
         with open(file_path, "r") as f:
             data = f.read()

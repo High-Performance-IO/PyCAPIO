@@ -20,7 +20,7 @@ PYBIND11_MODULE(_pycapio, m) {
 
     m.attr("FILE_MODES") = file_modes;
 
-    m.attr("CAPIO_DEFAULT_APP_NAME") = CAPIO_DEFAULT_APP_NAME;
+    m.attr("CAPIO_DEFAULT_APP_NAME")      = CAPIO_DEFAULT_APP_NAME;
     m.attr("CAPIO_DEFAULT_WORKFLOW_NAME") = CAPIO_DEFAULT_WORKFLOW_NAME;
 
     m.add_object("_cleanup", pybind11::capsule([]() { libcapio_teardown(); }));
@@ -45,7 +45,10 @@ PYBIND11_MODULE(_pycapio, m) {
         .def("fileno", &CapioTextIOWrapper::fileno)
         .def("close", &CapioTextIOWrapper::close)
         .def("__enter__", [](CapioTextIOWrapper &self) { return self; })
-        .def("__exit__", [](CapioTextIOWrapper &self) { self.close(); });
+        .def("__exit__",
+             [](CapioTextIOWrapper &self, [[maybe_unused]] const pybind11::object &exc_type,
+                [[maybe_unused]] const pybind11::object &exc_val,
+                [[maybe_unused]] const pybind11::object &exc_tb) { self.close(); });
 
     pybind11::class_<CapioBinaryIOWrapper>(m, "PyCapioBinaryIOWrapper")
         .def(pybind11::init<int, uint64_t>(), pybind11::arg("fd"),
@@ -75,4 +78,30 @@ PYBIND11_MODULE(_pycapio, m) {
         .def("closed", [](CapioBinaryIOWrapper &self) { self.close(); })
         .def("__enter__", [](CapioBinaryIOWrapper &self) { return &self; })
         .def("__exit__", [](CapioBinaryIOWrapper &self, pybind11::args) { self.close(); });
+
+    pybind11::class_<CapioDirEntry>(m, "DirEntry")
+        .def_property_readonly("name", &CapioDirEntry::name)
+        .def_property_readonly("path", &CapioDirEntry::path)
+        .def("inode", &CapioDirEntry::inode)
+        .def("is_dir", &CapioDirEntry::is_dir, pybind11::arg("follow_symlinks") = true)
+        .def("is_file", &CapioDirEntry::is_file, pybind11::arg("follow_symlinks") = true)
+        .def("is_symlink", &CapioDirEntry::is_symlink);
+
+    pybind11::class_<_CapioScandirIteratorWrapper>(m, "PyCapioScandirWrapper")
+        .def(pybind11::init<const std::filesystem::path &>())
+        .def("__iter__", &_CapioScandirIteratorWrapper::iter,
+             pybind11::return_value_policy::reference_internal)
+        .def("__next__", &_CapioScandirIteratorWrapper::next)
+        .def("close", &_CapioScandirIteratorWrapper::close)
+        .def(
+            "__enter__",
+            [](_CapioScandirIteratorWrapper &self) -> _CapioScandirIteratorWrapper & {
+                return self;
+            },
+            pybind11::return_value_policy::reference_internal)
+        .def("__exit__", [](_CapioScandirIteratorWrapper &self, pybind11::object, pybind11::object,
+                            pybind11::object) {
+            self.close();
+            return false;
+        });
 }
