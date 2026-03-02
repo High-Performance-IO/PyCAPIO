@@ -33,6 +33,9 @@ PYBIND11_MODULE(_pycapio, m) {
     m.def("pycapio_open", &libcapio_open, "Open a file", pybind11::arg("path"),
           pybind11::arg("flags"), pybind11::arg("mode") = 0);
 
+    m.def("pycapio_mkdir", &libcapio_mkdir, "Create a directory", pybind11::arg("path"),
+          pybind11::arg("flags") = 0x777);
+
     pybind11::class_<CapioTextIOWrapper>(m, "PyCapioTextIOWrapper")
         .def(pybind11::init<int, uint64_t>(), pybind11::arg("fd"),
              pybind11::arg("chunk_size") = 4096)
@@ -44,6 +47,8 @@ PYBIND11_MODULE(_pycapio, m) {
         .def("writelines", &CapioTextIOWrapper::writelines, pybind11::arg("lines"))
         .def("fileno", &CapioTextIOWrapper::fileno)
         .def("close", &CapioTextIOWrapper::close)
+        .def("seek", &CapioTextIOWrapper::seek, pybind11::arg("offset") = 0,
+             pybind11::arg("whence") = SEEK_SET)
         .def("__enter__", [](CapioTextIOWrapper &self) { return self; })
         .def("__exit__",
              [](CapioTextIOWrapper &self, [[maybe_unused]] const pybind11::object &exc_type,
@@ -76,6 +81,8 @@ PYBIND11_MODULE(_pycapio, m) {
         .def("fileno", &CapioBinaryIOWrapper::fileno)
         .def("close", &CapioBinaryIOWrapper::close)
         .def("closed", [](CapioBinaryIOWrapper &self) { self.close(); })
+        .def("seek", &CapioBinaryIOWrapper::seek, pybind11::arg("offset") = 0,
+             pybind11::arg("whence") = SEEK_SET)
         .def("__enter__", [](CapioBinaryIOWrapper &self) { return &self; })
         .def("__exit__", [](CapioBinaryIOWrapper &self, pybind11::args) { self.close(); });
 

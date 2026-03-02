@@ -5,6 +5,8 @@ include(FetchContent)
 include(ExternalProject)
 include(GNUInstallDirs)
 
+option(CAPIO_LOG "Enable log capabilities within the CAPIO communication queues and libcapio adapter" OFF)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -46,6 +48,7 @@ ExternalProject_Add(
         -DCMAKE_INSTALL_PREFIX=${CAPIO_INSTALL_DIR}
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+        -DCAPIO_LOG=${CAPIO_LOG}
 
         INSTALL_COMMAND ""
 )

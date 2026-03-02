@@ -105,17 +105,23 @@ class _CapioIOWrapper {
             _closed = true;
         }
     }
+
+    [[nodiscard]] auto seek(int offset, int whence) const {
+        return libcapio_lseek(this->fileno(), offset, whence);
+    }
 };
 
 class CapioBinaryIOWrapper final : public _CapioIOWrapper {
     using _CapioIOWrapper::_CapioIOWrapper;
-public:
+
+  public:
     ~CapioBinaryIOWrapper() { close(); }
 };
 
 class CapioTextIOWrapper final : public _CapioIOWrapper {
     using _CapioIOWrapper::_CapioIOWrapper;
-public:
+
+  public:
     ~CapioTextIOWrapper() { close(); }
 };
 

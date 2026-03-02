@@ -56,7 +56,11 @@ class _CapioScandirIteratorWrapper {
             throw pybind11::stop_iteration();
         }
 
-        return CapioDirEntry(path, ent);
+        if (strcmp(ent.d_name, ".") == 0 || strcmp(ent.d_name, "..") == 0) {
+            return next();
+        }
+
+        return {path, ent};
     }
 
     _CapioScandirIteratorWrapper &iter() { return *this; }

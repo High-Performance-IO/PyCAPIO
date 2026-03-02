@@ -20,6 +20,8 @@ inline bool syscall_no_intercept_flag;
 #include "utils/filesystem.hpp"
 #include "utils/snapshot.hpp"
 
+#include "common/logger.hpp"
+
 #include "handlers.hpp"
 
 static bool libcapio_initialized = false;
@@ -116,6 +118,30 @@ inline auto libcapio_close(const int fd) {
 inline auto libcapio_readdir(const int fd, dirent64 *entry) {
     long result;
     getdents_handler_impl(fd, reinterpret_cast<long>(entry), sizeof(linux_dirent64), &result, true);
+
+    if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
+        throw std::runtime_error(
+            "ERROR: libcapio readdir on non CAPIO directory not yet supported");
+    }
+
+    return result;
+}
+
+inline auto libcapio_mkdir(const char *path, int mode) {
+    long result;
+    mkdir_handler(reinterpret_cast<long>(path), mode, NULL, NULL, NULL, NULL, &result);
+
+    if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
+        throw std::runtime_error(
+            "ERROR: libcapio readdir on non CAPIO directory not yet supported");
+    }
+
+    return result;
+}
+
+inline auto libcapio_lseek(int fd, long offset, int whence) {
+    long result;
+    lseek_handler(fd, offset, whence, NULL, NULL, NULL, &result);
 
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         throw std::runtime_error(
