@@ -1,8 +1,3 @@
-// Make CAPIO logger behave like libcapio_posix.so
-#ifndef __CAPIO_POSIX
-#define __CAPIO_POSIX
-#endif
-
 #include "libcapio.hpp"
 #include "pybind11/pybind11.h"
 #include <pybind11/stl.h>

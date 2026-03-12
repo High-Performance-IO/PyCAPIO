@@ -1,9 +1,8 @@
 #ifndef PYCAPIO_PYCAPIO_HPP
 #define PYCAPIO_PYCAPIO_HPP
 
-// Make CAPIO logger behave like libcapio_posix.so
-#ifndef __CAPIO_POSIX
-#define __CAPIO_POSIX
+#ifndef __LIBCAPIO
+#define __LIBCAPIO
 #endif
 
 /**
@@ -34,6 +33,9 @@ static bool libcapio_initialized = false;
 inline void libcapio_init(const std::filesystem::path &CAPIO_DIR = ".",
                           const std::string &CAPIO_APP_NAME      = CAPIO_DEFAULT_APP_NAME,
                           const std::string &CAPIO_WORKFLOW_NAME = CAPIO_DEFAULT_WORKFLOW_NAME) {
+
+    START_LOG(gettid(), "libcapio_init(CAPIO_DIR=%s, CAPIO_APP_NAME=%s, CAPIO_WORKFLOW_NAME=%s)",
+              CAPIO_DIR.c_str(), CAPIO_APP_NAME.c_str(), CAPIO_WORKFLOW_NAME.c_str());
 
     if (libcapio_initialized) {
         return;
@@ -69,13 +71,18 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR = ".",
                   << std::to_string(gettid()) << std::endl
                   << std::endl;
     }
+
+    LOG("\n\n");
 }
 
 inline void libcapio_teardown() {
+    START_LOG(gettid(), "libcapio_teardown()");
     if (libcapio_initialized) {
         exit_handler(NULL, NULL, NULL, NULL, NULL, NULL, NULL);
         libcapio_initialized = false;
     }
+
+    LOG("\n\n");
 }
 
 inline auto libcapio_open(const char *path, int flags, mode_t mode = 0) {
@@ -93,34 +100,45 @@ inline auto libcapio_open(const char *path, int flags, mode_t mode = 0) {
         LOG("Error has occurred while opening file from server side! errno=%s", strerror(errno));
     }
 
+    LOG("\n\n");
     return static_cast<int>(result);
 }
 
 inline auto libcapio_read(const int fd, char *buf, const size_t size) {
+    START_LOG(gettid(), "call(fd=%d, size=%ld)", fd, size);
     long result;
     read_handler(fd, reinterpret_cast<long>(buf), size, NULL, NULL, NULL, &result);
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         return read(fd, buf, size);
     }
+
+    LOG("\n\n");
     return result;
 }
 
 inline auto libcapio_write(const int fd, const char *buf, const size_t size) {
+    START_LOG(gettid(), "call(fd=%d, size=%ld)", fd, size);
     long result;
     write_handler(fd, reinterpret_cast<long>(buf), size, NULL, NULL, NULL, &result);
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         return write(fd, buf, size);
     }
+
+    LOG("\n\n");
     return result;
 }
 
 inline auto libcapio_close(const int fd) {
+    START_LOG(gettid(), "call(fd=%ld)", fd);
     long result;
     close_handler(fd, NULL, NULL, NULL, NULL, NULL, &result);
+
+    LOG("\n\n");
     return result;
 }
 
 inline auto libcapio_readdir(const int fd, dirent64 *entry) {
+    START_LOG(gettid(), "call(fd=%d)", fd);
     long result;
     getdents_handler_impl(fd, reinterpret_cast<long>(entry), sizeof(linux_dirent64), &result, true);
 
@@ -129,10 +147,12 @@ inline auto libcapio_readdir(const int fd, dirent64 *entry) {
             "ERROR: libcapio readdir on non CAPIO directory not yet supported");
     }
 
+    LOG("\n\n");
     return result;
 }
 
 inline auto libcapio_mkdir(const char *path, int mode) {
+    START_LOG(gettid(), "call(path=%s)", path);
     long result;
     mkdir_handler(reinterpret_cast<long>(path), mode, NULL, NULL, NULL, NULL, &result);
 
@@ -141,10 +161,12 @@ inline auto libcapio_mkdir(const char *path, int mode) {
             "ERROR: libcapio readdir on non CAPIO directory not yet supported");
     }
 
+    LOG("\n\n");
     return result;
 }
 
 inline auto libcapio_lseek(int fd, long offset, int whence) {
+    START_LOG(gettid(), "call(fd=%d, offset=%d, whence=%d)", fd, offset, whence);
     long result;
     lseek_handler(fd, offset, whence, NULL, NULL, NULL, &result);
 
@@ -153,6 +175,7 @@ inline auto libcapio_lseek(int fd, long offset, int whence) {
             "ERROR: libcapio readdir on non CAPIO directory not yet supported");
     }
 
+    LOG("\n\n");
     return result;
 }
 
