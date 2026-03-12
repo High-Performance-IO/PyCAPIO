@@ -1,6 +1,11 @@
 #ifndef PYCAPIO_PYCAPIO_HPP
 #define PYCAPIO_PYCAPIO_HPP
 
+// Make CAPIO logger behave like libcapio_posix.so
+#ifndef __CAPIO_POSIX
+#define __CAPIO_POSIX
+#endif
+
 /**
  * Capio log level.
  * if -1, and capio logging is enable everything is logged, otherwise, only
