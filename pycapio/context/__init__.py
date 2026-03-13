@@ -60,10 +60,14 @@ def makedirs_proxy(path_val, mode=0o777, *args, **kwargs):
         return _REAL_MAKEDIRS(path_val, mode, *args, **kwargs)
 
 
-def CapioContext(capio_dir=".",
+def CapioContext(*,
+                 capio_dir=".",
                  capio_app_name=CAPIO_DEFAULT_APP_NAME,
                  capio_workflow_name=CAPIO_DEFAULT_WORKFLOW_NAME,
-                 silent=True):
+                 silent=True,
+                 capio_server_exec_path="capio_server",
+                 capio_cl_configuration_file="",
+                 await_server_timeout_seconds=2):
     def _CapioContext(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -73,8 +77,12 @@ def CapioContext(capio_dir=".",
             global _CAPIO_DIR
             if not py_capio_initialized:
                 _CAPIO_DIR = path.abspath(capio_dir)
-                pycapio_init(CAPIO_DIR=_CAPIO_DIR, CAPIO_WORKFLOW_NAME=capio_workflow_name,
-                             CAPIO_APP_NAME=capio_app_name)
+                pycapio_init(CAPIO_DIR=_CAPIO_DIR,
+                             CAPIO_WORKFLOW_NAME=capio_workflow_name,
+                             CAPIO_APP_NAME=capio_app_name,
+                             capio_server_exec_path=capio_server_exec_path,
+                             capio_cl_configuration_file=capio_cl_configuration_file,
+                             await_server_timeout_seconds=await_server_timeout_seconds)
                 py_capio_initialized = True
                 atexit.register(pycapio_teardown)
 

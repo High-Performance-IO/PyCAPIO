@@ -16,62 +16,50 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -pedantic -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 
-set(CAPIO_PREFIX ${CMAKE_BINARY_DIR}/external/capio)
-set(CAPIO_INSTALL_DIR ${CAPIO_PREFIX}/install)
-set(CAPIO_INCLUDE_DIR ${CAPIO_INSTALL_DIR}/include)
-
 FetchContent_Declare(
         pybind11
         GIT_REPOSITORY https://github.com/pybind/pybind11.git
         GIT_TAG v3.0.1
 )
-FetchContent_MakeAvailable(pybind11)
-
-file(MAKE_DIRECTORY ${CAPIO_INCLUDE_DIR})
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     message(STATUS "Enabling CAPIO Logger")
     add_compile_definitions(CAPIO_LOG)
 endif ()
 
-ExternalProject_Add(
+FetchContent_Declare(
         capio
-        PREFIX ${CAPIO_PREFIX}
         GIT_REPOSITORY https://github.com/High-Performance-IO/capio.git
         GIT_TAG master
-
-        # Patch to remove specific subdirectories
-        PATCH_COMMAND sed -i "/add_subdirectory(capio\\/posix)/d" <SOURCE_DIR>/CMakeLists.txt
-        COMMAND sed -i "/add_subdirectory(capio\\/server)/d" <SOURCE_DIR>/CMakeLists.txt
-
         CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${CAPIO_INSTALL_DIR}
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCMAKE_POSITION_INDEPENDENT_CODE=ON
         -DCAPIO_LOG=${CAPIO_LOG}
-
-        INSTALL_COMMAND ""
 )
 
-add_library(capio_headers INTERFACE)
-target_include_directories(capio_headers INTERFACE
-        ${CAPIO_PREFIX}/src/capio/capio
-        ${CAPIO_PREFIX}/src/capio/capio/posix
+
+FetchContent_MakeAvailable(pybind11 capio)
+
+if (SKBUILD_SCRIPTS_DIR)
+    set(CAPIO_INSTALL_DIR ${SKBUILD_SCRIPTS_DIR})
+else ()
+    set(CAPIO_INSTALL_DIR bin)
+endif ()
+
+install(
+        TARGETS capio_server
+        RUNTIME DESTINATION ${CAPIO_INSTALL_DIR}
 )
 ########################
 # PYBIND11 TARGET
 ########################
 
-pybind11_add_module(
-        _pycapio
-        pycapio.cpp
-)
-add_dependencies(_pycapio capio)
+pybind11_add_module(_pycapio pycapio.cpp)
 
-target_link_libraries(
-        _pycapio
-        PRIVATE
-        capio_headers
+message(STATUS "CAPIO_PREFIX = ${capio_SOURCE_DIR}")
+
+target_include_directories(_pycapio PRIVATE
+        ${capio_SOURCE_DIR}/capio
+        ${capio_SOURCE_DIR}/capio/posix
 )
 
 target_compile_options(
@@ -97,12 +85,10 @@ file(GLOB example_sources
 foreach (example_src ${example_sources})
     get_filename_component(example_name ${example_src} NAME_WE)
     add_executable(${example_name} ${example_src})
-    add_dependencies(${example_name} capio)
 
-    target_link_libraries(
-            ${example_name}
-            PRIVATE
-            capio_headers
+    target_include_directories(${example_name} PRIVATE
+            ${capio_SOURCE_DIR}/capio
+            ${capio_SOURCE_DIR}/capio/posix
     )
 
     target_compile_options(
@@ -123,17 +109,11 @@ endforeach ()
 #############################
 
 add_executable(test_CapioTextIOWrapper tests/CapioTextIOWrapper.cpp)
-add_dependencies(test_CapioTextIOWrapper capio)
 
 target_include_directories(test_CapioTextIOWrapper PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR})
-
-add_dependencies(test_CapioTextIOWrapper capio)
-
-target_link_libraries(
-        test_CapioTextIOWrapper
-        PRIVATE
-        capio_headers
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        ${capio_SOURCE_DIR}/capio
+        ${capio_SOURCE_DIR}/capio/posix
 )
 
 target_compile_options(

@@ -30,15 +30,91 @@ inline bool syscall_no_intercept_flag;
 
 static bool libcapio_initialized = false;
 
-inline void libcapio_init(const std::filesystem::path &CAPIO_DIR = ".",
-                          const std::string &CAPIO_APP_NAME      = CAPIO_DEFAULT_APP_NAME,
-                          const std::string &CAPIO_WORKFLOW_NAME = CAPIO_DEFAULT_WORKFLOW_NAME) {
+inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
+                          const std::string &CAPIO_APP_NAME         = CAPIO_DEFAULT_APP_NAME,
+                          const std::string &CAPIO_WORKFLOW_NAME    = CAPIO_DEFAULT_WORKFLOW_NAME,
+                          const std::string &capio_server_exec_path = "capio_server",
+                          const std::string &capio_cl_config        = "",
+                          const int await_server_timeout_seconds    = 2) {
 
     START_LOG(gettid(), "libcapio_init(CAPIO_DIR=%s, CAPIO_APP_NAME=%s, CAPIO_WORKFLOW_NAME=%s)",
               CAPIO_DIR.c_str(), CAPIO_APP_NAME.c_str(), CAPIO_WORKFLOW_NAME.c_str());
 
+    static constexpr char NO_CONFIG_FLAG[] = "--no-config";
+    static constexpr char CONFIG_FLAG[]    = "--config";
+
     if (libcapio_initialized) {
         return;
+    }
+
+    // check if server instance exists. If not, boot a server instance
+    if (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
+        std::cout << "[[LIBCAPIO]] Booting up CAPIO server instance" << std::endl;
+
+        std::vector<std::string> newEnv;
+        for (char **env = environ; *env != nullptr; ++env) {
+            newEnv.emplace_back(*env);
+        }
+
+        newEnv.emplace_back("CAPIO_DIR=" + CAPIO_DIR.string());
+        newEnv.emplace_back("CAPIO_LOG_LEVEL=-1");
+        newEnv.emplace_back("CAPIO_WORKFLOW_NAME=" + CAPIO_WORKFLOW_NAME);
+
+        std::vector<char *> envPtrs;
+        for (auto &s : newEnv) {
+            envPtrs.push_back(&s[0]);
+        }
+        envPtrs.push_back(nullptr);
+
+        // resolve capio_server executable if not provided as absolute path to a binary from PATH
+        std::string resolved_capio_server_exec_path = capio_server_exec_path;
+        if (capio_server_exec_path == "capio_server") {
+            const auto path = std::getenv("PATH");
+            std::stringstream ss(path);
+            std::string item;
+
+            while (std::getline(ss, item, ':')) {
+                std::filesystem::path check(item);
+                check /= capio_server_exec_path;
+                if (std::filesystem::exists(check)) {
+                    resolved_capio_server_exec_path = check;
+                    break;
+                }
+            }
+        }
+
+        // Fail if capio_server binary executable does not exists
+        if (!std::filesystem::exists(resolved_capio_server_exec_path)) {
+            std::cerr << "[[LIBCAPIO]] Could not locate capio_server executable in PATH!"
+                      << std::endl;
+            std::exit(EXIT_FAILURE);
+        }
+
+        char *args[4] = {const_cast<char *>(resolved_capio_server_exec_path.c_str()),
+                         capio_cl_config.empty() ? const_cast<char *>(NO_CONFIG_FLAG)
+                                                 : const_cast<char *>(CONFIG_FLAG),
+                         capio_cl_config.empty() ? nullptr
+                                                 : const_cast<char *>(capio_cl_config.c_str()),
+                         nullptr};
+
+        if (const pid_t pid = fork(); pid == 0) {
+            execve(args[0], args, envPtrs.data());
+            std::cerr << "[[LIBCAPIO]] " + capio_server_exec_path << std::endl;
+            std::cerr << "[[LIBCAPIO]] EXECVE failure: " + std::string(strerror(errno))
+                      << std::endl;
+            std::exit(EXIT_FAILURE);
+        } else if (pid > 0) {
+            std::cout << "[[LIBCAPIO]] Started CAPIO server with  PID: " << pid << std::endl;
+            sleep(await_server_timeout_seconds);
+            if (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
+                std::cerr << "[[LIBCAPIO]] Error: unable to locate active CAPIO server instance"
+                          << std::endl;
+                std::exit(EXIT_FAILURE);
+            }
+        } else {
+            std::cerr << "Failed to FORK server thread. Error: " + std::string(std::strerror(errno))
+                      << std::endl;
+        }
     }
 
     if (getenv("CAPIO_APP_NAME") == nullptr) {

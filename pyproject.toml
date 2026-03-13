@@ -27,7 +27,6 @@ Source = "https://github.com/high-performance-io/libcapio"
 cmake.version = ">=3.15"
 wheel.packages = ["pycapio"]
 
-
 [tool.scikit-build.cmake.define]
 CMAKE_BUILD_TYPE = "Release"
 CAPIO_LOG="OFF"
