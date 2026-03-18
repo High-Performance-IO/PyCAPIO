@@ -30,7 +30,7 @@ endif ()
 FetchContent_Declare(
         capio
         GIT_REPOSITORY https://github.com/High-Performance-IO/capio.git
-        GIT_TAG master
+        GIT_TAG getdents-fixes
         CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DCAPIO_LOG=${CAPIO_LOG}

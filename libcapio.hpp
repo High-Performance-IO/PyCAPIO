@@ -68,9 +68,9 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
     if (libcapio_preamble.empty()) {
         char host_name[HOST_NAME_MAX];
         gethostname(host_name, HOST_NAME_MAX);
-        const auto pid = getpid();
-        libcapio_preamble =
-            "[[LIBCAPIO::" + std::string(host_name) + "::" + std::to_string(pid) + "]] ";
+        const auto pid    = getpid();
+        libcapio_preamble = "[[LIBCAPIO::" + std::string(host_name) + "::" + CAPIO_APP_NAME +
+                            "::" + std::to_string(pid) + "]] ";
     }
 
     START_LOG(gettid(), "libcapio_init(CAPIO_DIR=%s, CAPIO_APP_NAME=%s, CAPIO_WORKFLOW_NAME=%s)",
@@ -146,10 +146,7 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
                 std::cout << libcapio_preamble << " Started CAPIO server with  PID: " << pid
                           << std::endl;
                 sleep(await_server_timeout_seconds);
-                while (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
-                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-                }
-                std::cout << libcapio_preamble << " Located CAPIO server instance" << std::endl;
+                // jump to attaching to shm queues and await normal execution
             } else {
                 std::cerr << libcapio_preamble
                           << "Failed to FORK server thread. Error: " +
