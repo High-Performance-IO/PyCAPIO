@@ -135,11 +135,10 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
             } else if (pid > 0) {
                 std::cout << "[[LIBCAPIO]] Started CAPIO server with  PID: " << pid << std::endl;
                 sleep(await_server_timeout_seconds);
-                if (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
-                    std::cerr << "[[LIBCAPIO]] Error: unable to locate active CAPIO server instance"
-                              << std::endl;
-                    std::exit(EXIT_FAILURE);
+                while (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(500));
                 }
+                std::cout << "[[LIBCAPIO]] Located CAPIO server instance" << std::endl;
             } else {
                 std::cerr << "Failed to FORK server thread. Error: " +
                                  std::string(std::strerror(errno))
