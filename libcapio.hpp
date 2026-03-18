@@ -41,19 +41,6 @@ class StartupSemaphore final {
     }
 
     [[nodiscard]] bool acquired() const { return fp > 0; }
-
-    void await() const {
-        while (!std::filesystem::exists(lock_to_check)) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
-    }
-
-    ~StartupSemaphore() {
-        if (fp > 0) {
-            close(fp);
-            unlink(lock_to_check.c_str());
-        }
-    }
 };
 
 static bool libcapio_initialized = false;
@@ -76,16 +63,28 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
     START_LOG(gettid(), "libcapio_init(CAPIO_DIR=%s, CAPIO_APP_NAME=%s, CAPIO_WORKFLOW_NAME=%s)",
               CAPIO_DIR.c_str(), CAPIO_APP_NAME.c_str(), CAPIO_WORKFLOW_NAME.c_str());
 
-    static constexpr char NO_CONFIG_FLAG[] = "--no-config";
-    static constexpr char CONFIG_FLAG[]    = "--config";
+    if (getenv("CAPIO_APP_NAME") == nullptr) {
+        setenv("CAPIO_APP_NAME", CAPIO_APP_NAME.c_str(), 1);
+    }
+
+    if (getenv("CAPIO_DIR") == nullptr) {
+        setenv("CAPIO_DIR", CAPIO_DIR.string().c_str(), 1);
+    }
+
+    if (std::getenv("CAPIO_WORKFLOW_NAME") == nullptr) {
+        setenv("CAPIO_WORKFLOW_NAME", CAPIO_WORKFLOW_NAME.c_str(), 1);
+    }
 
     if (libcapio_initialized) {
         return;
     }
 
-    const StartupSemaphore exist_lock(CAPIO_WORKFLOW_NAME);
     // check if server instance exists. If not, boot a server instance
-    if (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
+    if (const StartupSemaphore exist_lock(CAPIO_WORKFLOW_NAME);
+        !std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME) && exist_lock.acquired()) {
+
+        static constexpr char NO_CONFIG_FLAG[] = "--no-config";
+        static constexpr char CONFIG_FLAG[]    = "--config";
 
         if (exist_lock.acquired()) {
             std::cout << libcapio_preamble << " Booting up CAPIO server instance" << std::endl;
@@ -156,20 +155,7 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
             }
         } else {
             std::cout << libcapio_preamble << " Waiting for server startup" << std::endl;
-            exist_lock.await();
         }
-    }
-
-    if (getenv("CAPIO_APP_NAME") == nullptr) {
-        setenv("CAPIO_APP_NAME", CAPIO_APP_NAME.c_str(), 1);
-    }
-
-    if (getenv("CAPIO_DIR") == nullptr) {
-        setenv("CAPIO_DIR", CAPIO_DIR.string().c_str(), 1);
-    }
-
-    if (std::getenv("CAPIO_WORKFLOW_NAME") == nullptr) {
-        setenv("CAPIO_WORKFLOW_NAME", CAPIO_WORKFLOW_NAME.c_str(), 1);
     }
 
     init_client(gettid());
