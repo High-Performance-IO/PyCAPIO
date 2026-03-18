@@ -83,9 +83,10 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
         return;
     }
 
+    const StartupSemaphore exist_lock(CAPIO_WORKFLOW_NAME);
     // check if server instance exists. If not, boot a server instance
     if (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
-        const StartupSemaphore exist_lock(CAPIO_WORKFLOW_NAME);
+
         if (exist_lock.acquired()) {
             std::cout << libcapio_preamble << " Booting up CAPIO server instance" << std::endl;
 
