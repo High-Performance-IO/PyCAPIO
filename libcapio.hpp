@@ -36,11 +36,18 @@ class StartupSemaphore final {
 
   public:
     explicit StartupSemaphore(const std::string &workflow_name)
-        : lock_to_check("/dev/shm/" + workflow_name + ".lock") {
-        fp = open(lock_to_check.c_str(), O_WRONLY | O_CREAT | O_EXCL, 0777);
+        : lock_to_check(workflow_name + ".lock") {
+        fp = shm_open(lock_to_check.c_str(), O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
     }
 
-    [[nodiscard]] bool acquired() const { return fp > 0; }
+    ~StartupSemaphore() {
+        if (fp != -1) {
+            close(fp);
+            unlink(lock_to_check.c_str());
+        }
+    }
+
+    explicit operator bool() const { return fp != -1; }
 };
 
 static bool libcapio_initialized = false;
@@ -79,14 +86,22 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
         return;
     }
 
+    bool server_is_started = false;
+
+    try {
+        CapioShmCanary canary(CAPIO_WORKFLOW_NAME);
+    } catch (const std::runtime_error &e) {
+        std::cout << libcapio_preamble << " CAPIO server is already started" << std::endl;
+        server_is_started = true;
+    }
+
     // check if server instance exists. If not, boot a server instance
-    if (const StartupSemaphore exist_lock(CAPIO_WORKFLOW_NAME);
-        !std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME) && exist_lock.acquired()) {
+    if (!server_is_started) {
+        const StartupSemaphore boot_lock(CAPIO_WORKFLOW_NAME);
+        if (boot_lock) {
+            static constexpr char NO_CONFIG_FLAG[] = "--no-config";
+            static constexpr char CONFIG_FLAG[]    = "--config";
 
-        static constexpr char NO_CONFIG_FLAG[] = "--no-config";
-        static constexpr char CONFIG_FLAG[]    = "--config";
-
-        if (exist_lock.acquired()) {
             std::cout << libcapio_preamble << " Booting up CAPIO server instance" << std::endl;
 
             std::vector<std::string> newEnv;
@@ -153,8 +168,6 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
                                  std::string(std::strerror(errno))
                           << std::endl;
             }
-        } else {
-            std::cout << libcapio_preamble << " Waiting for server startup" << std::endl;
         }
     }
 
