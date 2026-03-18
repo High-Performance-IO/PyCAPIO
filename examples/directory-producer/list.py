@@ -7,7 +7,11 @@ import time
 from pycapio.context import CapioContext
 
 
-@CapioContext(capio_dir="/tmp", capio_app_name="consumer", capio_workflow_name="list-directory")
+@CapioContext(capio_dir="/tmp",
+              capio_app_name="consumer",
+              capio_workflow_name="list-directory",
+              capio_server_exec_path=os.environ["CAPIO_SERVER_BIN"],
+              capio_cl_configuration_file=os.environ["CAPIO_CL_CONFIG"])
 def list_directory_raw():
     try:
         for entry in os.scandir('/tmp'):

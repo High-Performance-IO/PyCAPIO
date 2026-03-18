@@ -3,6 +3,7 @@
 
 #ifndef __LIBCAPIO
 #define __LIBCAPIO
+#include <thread>
 #endif
 
 /**
@@ -29,18 +30,26 @@ inline bool syscall_no_intercept_flag;
 
 class StartupSemaphore final {
     std::FILE *fp;
+    const std::string lock_to_check;
 
   public:
-    explicit StartupSemaphore(const std::string &workflow_name) {
-        const std::string lock_to_check = "/dev/shm/" + workflow_name + ".lock";
-        fp                              = std::fopen(lock_to_check.c_str(), "wx");
+    explicit StartupSemaphore(const std::string &workflow_name)
+        : lock_to_check("/dev/shm/" + workflow_name + ".lock") {
+        fp = std::fopen(lock_to_check.c_str(), "wx");
     }
 
     [[nodiscard]] bool acquired() const { return fp != nullptr; }
 
+    void await() const {
+        while (!std::filesystem::exists(lock_to_check)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
+    }
+
     ~StartupSemaphore() {
         if (fp != nullptr) {
             std::fclose(fp);
+            std::filesystem::remove(lock_to_check);
         }
     }
 };
@@ -65,74 +74,79 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
     }
 
     // check if server instance exists. If not, boot a server instance
-    if (const StartupSemaphore exist_lock(CAPIO_WORKFLOW_NAME);
-        !std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME) && exist_lock.acquired()) {
+    if (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
+        const StartupSemaphore exist_lock(CAPIO_WORKFLOW_NAME);
+        if (exist_lock.acquired()) {
+            std::cout << "[[LIBCAPIO]] Booting up CAPIO server instance" << std::endl;
 
-        std::cout << "[[LIBCAPIO]] Booting up CAPIO server instance" << std::endl;
+            std::vector<std::string> newEnv;
+            for (char **env = environ; *env != nullptr; ++env) {
+                newEnv.emplace_back(*env);
+            }
 
-        std::vector<std::string> newEnv;
-        for (char **env = environ; *env != nullptr; ++env) {
-            newEnv.emplace_back(*env);
-        }
+            newEnv.emplace_back("CAPIO_DIR=" + CAPIO_DIR.string());
+            newEnv.emplace_back("CAPIO_LOG_LEVEL=-1");
+            newEnv.emplace_back("CAPIO_WORKFLOW_NAME=" + CAPIO_WORKFLOW_NAME);
 
-        newEnv.emplace_back("CAPIO_DIR=" + CAPIO_DIR.string());
-        newEnv.emplace_back("CAPIO_LOG_LEVEL=-1");
-        newEnv.emplace_back("CAPIO_WORKFLOW_NAME=" + CAPIO_WORKFLOW_NAME);
+            std::vector<char *> envPtrs;
+            for (auto &s : newEnv) {
+                envPtrs.push_back(&s[0]);
+            }
+            envPtrs.push_back(nullptr);
 
-        std::vector<char *> envPtrs;
-        for (auto &s : newEnv) {
-            envPtrs.push_back(&s[0]);
-        }
-        envPtrs.push_back(nullptr);
+            // resolve capio_server executable if not provided as absolute path to a binary from
+            // PATH
+            std::string resolved_capio_server_exec_path = capio_server_exec_path;
+            if (capio_server_exec_path == "capio_server") {
+                const auto path = std::getenv("PATH");
+                std::stringstream ss(path);
+                std::string item;
 
-        // resolve capio_server executable if not provided as absolute path to a binary from PATH
-        std::string resolved_capio_server_exec_path = capio_server_exec_path;
-        if (capio_server_exec_path == "capio_server") {
-            const auto path = std::getenv("PATH");
-            std::stringstream ss(path);
-            std::string item;
-
-            while (std::getline(ss, item, ':')) {
-                std::filesystem::path check(item);
-                check /= capio_server_exec_path;
-                if (std::filesystem::exists(check)) {
-                    resolved_capio_server_exec_path = check;
-                    break;
+                while (std::getline(ss, item, ':')) {
+                    std::filesystem::path check(item);
+                    check /= capio_server_exec_path;
+                    if (std::filesystem::exists(check)) {
+                        resolved_capio_server_exec_path = check;
+                        break;
+                    }
                 }
             }
-        }
 
-        // Fail if capio_server binary executable does not exists
-        if (!std::filesystem::exists(resolved_capio_server_exec_path)) {
-            std::cerr << "[[LIBCAPIO]] Could not locate capio_server executable in PATH!"
-                      << std::endl;
-            std::exit(EXIT_FAILURE);
-        }
-
-        char *args[4] = {const_cast<char *>(resolved_capio_server_exec_path.c_str()),
-                         capio_cl_config.empty() ? const_cast<char *>(NO_CONFIG_FLAG)
-                                                 : const_cast<char *>(CONFIG_FLAG),
-                         capio_cl_config.empty() ? nullptr
-                                                 : const_cast<char *>(capio_cl_config.c_str()),
-                         nullptr};
-
-        if (const pid_t pid = fork(); pid == 0) {
-            execve(args[0], args, envPtrs.data());
-            std::cerr << "[[LIBCAPIO]] " + capio_server_exec_path << std::endl;
-            std::cerr << "[[LIBCAPIO]] EXECVE failure: " + std::string(strerror(errno))
-                      << std::endl;
-            std::exit(EXIT_FAILURE);
-        } else if (pid > 0) {
-            std::cout << "[[LIBCAPIO]] Started CAPIO server with  PID: " << pid << std::endl;
-            sleep(await_server_timeout_seconds);
-            if (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
-                std::cerr << "[[LIBCAPIO]] Error: unable to locate active CAPIO server instance"
+            // Fail if capio_server binary executable does not exists
+            if (!std::filesystem::exists(resolved_capio_server_exec_path)) {
+                std::cerr << "[[LIBCAPIO]] Could not locate capio_server executable in PATH!"
                           << std::endl;
                 std::exit(EXIT_FAILURE);
             }
+
+            char *args[4] = {const_cast<char *>(resolved_capio_server_exec_path.c_str()),
+                             capio_cl_config.empty() ? const_cast<char *>(NO_CONFIG_FLAG)
+                                                     : const_cast<char *>(CONFIG_FLAG),
+                             capio_cl_config.empty() ? nullptr
+                                                     : const_cast<char *>(capio_cl_config.c_str()),
+                             nullptr};
+
+            if (const pid_t pid = fork(); pid == 0) {
+                execve(args[0], args, envPtrs.data());
+                std::cerr << "[[LIBCAPIO]] " + capio_server_exec_path << std::endl;
+                std::cerr << "[[LIBCAPIO]] EXECVE failure: " + std::string(strerror(errno))
+                          << std::endl;
+                std::exit(EXIT_FAILURE);
+            } else if (pid > 0) {
+                std::cout << "[[LIBCAPIO]] Started CAPIO server with  PID: " << pid << std::endl;
+                sleep(await_server_timeout_seconds);
+                if (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
+                    std::cerr << "[[LIBCAPIO]] Error: unable to locate active CAPIO server instance"
+                              << std::endl;
+                    std::exit(EXIT_FAILURE);
+                }
+            } else {
+                std::cerr << "Failed to FORK server thread. Error: " +
+                                 std::string(std::strerror(errno))
+                          << std::endl;
+            }
         } else {
-            std::cerr << "Failed to FORK server thread. Error: " + std::string(std::strerror(errno))
-                      << std::endl;
+            exist_lock.await();
         }
     }
 

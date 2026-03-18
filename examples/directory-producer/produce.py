@@ -1,9 +1,11 @@
 import sys
-import tty
 import termios
+import tty
 from datetime import datetime
+import os
 
 from pycapio.context import CapioContext
+
 
 def get_keypress():
     fd = sys.stdin.fileno()
@@ -16,7 +18,11 @@ def get_keypress():
     return ch
 
 
-@CapioContext(capio_dir="/tmp", capio_app_name="producer", capio_workflow_name="list-directory")
+@CapioContext(capio_dir="/tmp",
+              capio_app_name="producer",
+              capio_workflow_name="list-directory",
+              capio_server_exec_path=os.environ["CAPIO_SERVER_BIN"],
+              capio_cl_configuration_file=os.environ["CAPIO_CL_CONFIG"])
 def run_code():
     try:
         while True:
@@ -33,6 +39,7 @@ def run_code():
 
     except KeyboardInterrupt:
         return
+
 
 if __name__ == "__main__":
     print("Press [ENTER] to create a unique file.")
