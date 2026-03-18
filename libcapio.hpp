@@ -14,7 +14,6 @@ inline bool syscall_no_intercept_flag;
 #define syscall_no_intercept syscall
 #define CAPIO_VERSION ""
 
-#include <array>
 #include <dirent.h>
 #include <string>
 
@@ -27,6 +26,24 @@ inline bool syscall_no_intercept_flag;
 #include "common/logger.hpp"
 
 #include "handlers.hpp"
+
+class StartupSemaphore final {
+    std::FILE *fp;
+
+  public:
+    explicit StartupSemaphore(const std::string &workflow_name) {
+        const std::string lock_to_check = "/dev/shm/" + workflow_name + ".lock";
+        fp                              = std::fopen(lock_to_check.c_str(), "wx");
+    }
+
+    [[nodiscard]] bool acquired() const { return fp != nullptr; }
+
+    ~StartupSemaphore() {
+        if (fp != nullptr) {
+            std::fclose(fp);
+        }
+    }
+};
 
 static bool libcapio_initialized = false;
 
@@ -48,7 +65,9 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
     }
 
     // check if server instance exists. If not, boot a server instance
-    if (!std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME)) {
+    if (const StartupSemaphore exist_lock(CAPIO_WORKFLOW_NAME);
+        !std::filesystem::exists("/dev/shm/" + CAPIO_WORKFLOW_NAME) && exist_lock.acquired()) {
+
         std::cout << "[[LIBCAPIO]] Booting up CAPIO server instance" << std::endl;
 
         std::vector<std::string> newEnv;
