@@ -1,0 +1,37 @@
+{
+  "name": "list-directory",
+  "IO_Graph": [
+    {
+      "name": "producer",
+      "input_stream": [],
+      "output_stream": [
+        "/tmp",
+        "/tmp/*.txt"
+      ],
+      "streaming": [
+        {
+          "dirname": [
+            "/tmp"
+          ],
+          "committed": "on_termination",
+          "mode": "no_update"
+        },
+        {
+          "name": [
+            "/tmp/*.txt"
+          ],
+          "committed": "on_close",
+          "mode": "update"
+        }
+      ]
+    },
+    {
+      "name": "consumer",
+      "input_stream": [
+        "/tmp",
+        "/tmp/*.txt"
+      ],
+      "output_stream": []
+    }
+  ]
+}
