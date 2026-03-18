@@ -168,6 +168,8 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
                                  std::string(std::strerror(errno))
                           << std::endl;
             }
+        }else {
+            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         }
     }
 
