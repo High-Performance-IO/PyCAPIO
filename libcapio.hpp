@@ -99,8 +99,10 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
     if (!server_is_started) {
         const StartupSemaphore boot_lock(CAPIO_WORKFLOW_NAME);
         if (boot_lock) {
-            static constexpr char NO_CONFIG_FLAG[] = "--no-config";
-            static constexpr char CONFIG_FLAG[]    = "--config";
+            static constexpr char NO_CONFIG_FLAG[]   = "--no-config";
+            static constexpr char CONFIG_FLAG[]      = "--config";
+            static constexpr char BACKEND_FLAG[]     = "--backend";
+            static constexpr char NO_BACKEND_AFTER[] = "none";
 
             std::cout << libcapio_preamble << " Booting up CAPIO server instance" << std::endl;
 
@@ -144,11 +146,13 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
                 std::exit(EXIT_FAILURE);
             }
 
-            char *args[4] = {const_cast<char *>(resolved_capio_server_exec_path.c_str()),
+            char *args[6] = {const_cast<char *>(resolved_capio_server_exec_path.c_str()),
                              capio_cl_config.empty() ? const_cast<char *>(NO_CONFIG_FLAG)
                                                      : const_cast<char *>(CONFIG_FLAG),
                              capio_cl_config.empty() ? nullptr
                                                      : const_cast<char *>(capio_cl_config.c_str()),
+                             const_cast<char *>(BACKEND_FLAG),
+                             const_cast<char *>(NO_BACKEND_AFTER),
                              nullptr};
 
             if (const pid_t pid = fork(); pid == 0) {
@@ -168,7 +172,7 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
                                  std::string(std::strerror(errno))
                           << std::endl;
             }
-        }else {
+        } else {
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         }
     }
