@@ -97,6 +97,8 @@ foreach (example_src ${example_sources})
             $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
     )
 
+    target_link_libraries(${example_name} PRIVATE rt)
+
     install(
             TARGETS ${example_name}
             RUNTIME DESTINATION bin
@@ -121,6 +123,8 @@ target_compile_options(
         PRIVATE
         $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
 )
+
+target_link_libraries(test_CapioTextIOWrapper PRIVATE rt)
 
 install(
         TARGETS test_CapioTextIOWrapper
