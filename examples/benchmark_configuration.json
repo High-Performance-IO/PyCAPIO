@@ -1,0 +1,29 @@
+{
+  "name": "benchmark",
+  "IO_Graph": [
+    {
+      "name": "producer",
+      "input_stream": [],
+      "output_stream": [
+        "*/test_data.bin"
+      ],
+      "streaming": [
+        {
+          "name": [
+            "*/test_data.bin"
+          ],
+          "committed": "on_close:1",
+          "mode": "no_update"
+        }
+      ]
+    },
+    {
+      "name": "consumer",
+      "input_stream": [
+        "*/test_data.bin"
+      ],
+      "output_stream": [],
+      "streaming": []
+    }
+  ]
+}
