@@ -52,40 +52,11 @@ class StartupSemaphore final {
 
 static bool libcapio_initialized = false;
 
-inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
-                          const std::string &CAPIO_APP_NAME         = CAPIO_DEFAULT_APP_NAME,
-                          const std::string &CAPIO_WORKFLOW_NAME    = CAPIO_DEFAULT_WORKFLOW_NAME,
-                          const std::string &capio_server_exec_path = "capio_server",
-                          const std::string &capio_cl_config        = "",
-                          const int await_server_timeout_seconds    = 2) {
-
-    if (libcapio_preamble.empty()) {
-        char host_name[HOST_NAME_MAX];
-        gethostname(host_name, HOST_NAME_MAX);
-        const auto pid    = getpid();
-        libcapio_preamble = "[[LIBCAPIO::" + std::string(host_name) + "::" + CAPIO_APP_NAME +
-                            "::" + std::to_string(pid) + "]] ";
-    }
-
-    START_LOG(gettid(), "libcapio_init(CAPIO_DIR=%s, CAPIO_APP_NAME=%s, CAPIO_WORKFLOW_NAME=%s)",
-              CAPIO_DIR.c_str(), CAPIO_APP_NAME.c_str(), CAPIO_WORKFLOW_NAME.c_str());
-
-    if (getenv("CAPIO_APP_NAME") == nullptr) {
-        setenv("CAPIO_APP_NAME", CAPIO_APP_NAME.c_str(), 1);
-    }
-
-    if (getenv("CAPIO_DIR") == nullptr) {
-        setenv("CAPIO_DIR", CAPIO_DIR.string().c_str(), 1);
-    }
-
-    if (std::getenv("CAPIO_WORKFLOW_NAME") == nullptr) {
-        setenv("CAPIO_WORKFLOW_NAME", CAPIO_WORKFLOW_NAME.c_str(), 1);
-    }
-
-    if (libcapio_initialized) {
-        return;
-    }
-
+inline void bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
+                                   const std::string &CAPIO_WORKFLOW_NAME,
+                                   const std::string &capio_server_exec_path,
+                                   const std::string &capio_cl_config,
+                                   const int await_server_timeout_seconds) {
     bool server_is_started = false;
 
     try {
@@ -176,6 +147,49 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         }
     }
+}
+
+inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
+                          const std::string &CAPIO_APP_NAME         = CAPIO_DEFAULT_APP_NAME,
+                          const std::string &CAPIO_WORKFLOW_NAME    = CAPIO_DEFAULT_WORKFLOW_NAME,
+                          const std::string &capio_server_exec_path = "capio_server",
+                          const std::string &capio_cl_config        = "",
+                          const int await_server_timeout_seconds    = 2) {
+
+    if (libcapio_preamble.empty()) {
+        char host_name[HOST_NAME_MAX];
+        gethostname(host_name, HOST_NAME_MAX);
+        const auto pid    = getpid();
+        libcapio_preamble = "[[LIBCAPIO::" + std::string(host_name) + "::" + CAPIO_APP_NAME +
+                            "::" + std::to_string(pid) + "]] ";
+    }
+
+    START_LOG(gettid(), "libcapio_init(CAPIO_DIR=%s, CAPIO_APP_NAME=%s, CAPIO_WORKFLOW_NAME=%s)",
+              CAPIO_DIR.c_str(), CAPIO_APP_NAME.c_str(), CAPIO_WORKFLOW_NAME.c_str());
+
+#ifdef CAPIO_LOG
+    std::cout << libcapio_preamble << " WARNING: LIBCAPIO HAS BEEN COMPILED IN RELEASE MODE!"
+              << std::endl;
+#endif
+
+    if (getenv("CAPIO_APP_NAME") == nullptr) {
+        setenv("CAPIO_APP_NAME", CAPIO_APP_NAME.c_str(), 1);
+    }
+
+    if (getenv("CAPIO_DIR") == nullptr) {
+        setenv("CAPIO_DIR", CAPIO_DIR.string().c_str(), 1);
+    }
+
+    if (std::getenv("CAPIO_WORKFLOW_NAME") == nullptr) {
+        setenv("CAPIO_WORKFLOW_NAME", CAPIO_WORKFLOW_NAME.c_str(), 1);
+    }
+
+    if (libcapio_initialized) {
+        return;
+    }
+
+    bootstrap_capio_server(CAPIO_DIR, CAPIO_WORKFLOW_NAME, capio_server_exec_path, capio_cl_config,
+                           await_server_timeout_seconds);
 
     init_client(gettid());
     init_filesystem();
