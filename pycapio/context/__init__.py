@@ -76,7 +76,7 @@ def CapioContext(*,
             global py_capio_initialized
             global _CAPIO_DIR
             if not py_capio_initialized:
-                _CAPIO_DIR = path.abspath(dir)
+                _CAPIO_DIR = path.abspath(capio_dir)
                 pycapio_init(CAPIO_DIR=_CAPIO_DIR,
                              CAPIO_WORKFLOW_NAME=workflow_name,
                              CAPIO_APP_NAME=app_name,

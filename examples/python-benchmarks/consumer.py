@@ -24,7 +24,7 @@ def benchmark_reader(filename):
     print(f"READ: {size_mb:.2f} MB - Time: {duration:.4f} seconds - Speed: {throughput:.2f} MB/s")
 
 
-@CapioContext(capio_dir=".", capio_app_name="consumer", capio_workflow_name="benchmark")
+@CapioContext(capio_dir=".", app_name="consumer", workflow_name="benchmark")
 def capio_benchmark_reader(filename):
     benchmark_reader(filename)
 
@@ -32,8 +32,10 @@ def capio_benchmark_reader(filename):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Direct I/O Benchmark")
     parser.add_argument("--file", type=str, required=True, help="Filename to use")
+    parser.add_argument("--capio", action='store_true', required=False)
+
     args = parser.parse_args()
-    if "--capio" in sys.argv:
+    if args.capio:
         capio_benchmark_reader(args.file)
     else:
         benchmark_reader(args.file)
