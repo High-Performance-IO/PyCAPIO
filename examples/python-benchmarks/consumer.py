@@ -26,9 +26,9 @@ def benchmark_reader(filename):
     return (size_mb, duration, throughput)
 
 
-@CapioContext(capio_dir="/mnt/lustre/e1000/home/dc167/dc167/msantima/libcapio/examples/python-benchmarks", 
-              capio_app_name="consumer", 
-              capio_workflow_name="benchmark")
+@CapioContext(capio_dir="/data/msantimaria/pycapio-tests/libcapio/examples/python-benchmarks/capio_dir", 
+              app_name="consumer", 
+              workflow_name="benchmark")
 def capio_benchmark_reader(filename):
     return benchmark_reader(filename)
 

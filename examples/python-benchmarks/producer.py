@@ -21,9 +21,9 @@ def benchmark_writer(filename, size_mb):
     print(f"WRITE: {size_mb} MB - Time: {duration:.4f} seconds - Speed: {throughput:.2f} MB/s")
 
 
-@CapioContext(capio_dir="/mnt/lustre/e1000/home/dc167/dc167/msantima/libcapio/examples/python-benchmarks", 
-              capio_app_name="consumer", 
-              capio_workflow_name="benchmark")
+@CapioContext(capio_dir="/data/msantimaria/pycapio-tests/libcapio/examples/python-benchmarks/capio_dir", 
+              app_name="consumer", 
+              workflow_name="benchmark")
 def capio_benchmark_writer(filename, size_mb):
     benchmark_writer(filename, size_mb)
 
