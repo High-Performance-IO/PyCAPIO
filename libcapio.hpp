@@ -3,6 +3,7 @@
 
 #ifndef __LIBCAPIO
 #define __LIBCAPIO
+#include <unistd.h>
 #include <thread>
 #endif
 
@@ -59,9 +60,8 @@ inline void bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
                                    const int await_server_timeout_seconds) {
     bool server_is_started = false;
 
-    try {
-        CapioShmCanary canary(CAPIO_WORKFLOW_NAME);
-    } catch (const std::runtime_error &e) {
+    std::string shm_name = "/dev/shm/" + CAPIO_WORKFLOW_NAME;
+    if(std::filesystem::exists(shm_name)){
         std::cout << libcapio_preamble << " CAPIO server is already started" << std::endl;
         server_is_started = true;
     }
@@ -157,9 +157,11 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
                           const int await_server_timeout_seconds    = 2) {
 
     if (libcapio_preamble.empty()) {
-        char host_name[HOST_NAME_MAX];
-        gethostname(host_name, HOST_NAME_MAX);
-        const auto pid    = getpid();
+        char host_name[HOST_NAME_MAX]{0};
+        if(gethostname(host_name, HOST_NAME_MAX) == -1){
+		    std::cout << "WARN: gethostname failed: " << std::strerror(errno) << std::endl;
+	    }
+	const auto pid    = getpid();
         libcapio_preamble = "[[LIBCAPIO::" + std::string(host_name) + "::" + CAPIO_APP_NAME +
                             "::" + std::to_string(pid) + "]] ";
     }
