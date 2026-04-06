@@ -23,7 +23,7 @@ for SIZE in "${SIZES[@]}"; do
       rm -f "$TEST_FILENAME"
     done
 
-    killall -ILL $SERVER_PID
+    killall -ILL capio_server
     rm -rf files_locations*.txt
     rm -rf /dev/shm/*
     rm -rf capio_logs
