@@ -61,7 +61,7 @@ def makedirs_proxy(path_val, mode=0o777, *args, **kwargs):
 
 
 def CapioContext(*,
-                 dir=".",
+                 capio_dir=".",
                  app_name=CAPIO_DEFAULT_APP_NAME,
                  workflow_name=CAPIO_DEFAULT_WORKFLOW_NAME,
                  silent=True,
