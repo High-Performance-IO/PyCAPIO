@@ -30,11 +30,11 @@ endif ()
 FetchContent_Declare(
         capio
         GIT_REPOSITORY https://github.com/High-Performance-IO/capio.git
-        GIT_TAG selct-compile-options
+        GIT_TAG f336af207abcc27c1a3b3b858bac4226d9b87cec
         CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DCAPIO_LOG=${CAPIO_LOG}
-	-DCAPIO_BUILD_POSIX=FALSE
+        -DCAPIO_BUILD_POSIX=OFF
 )
 
 
