@@ -109,6 +109,11 @@ class _CapioIOWrapper {
     [[nodiscard]] auto seek(int offset, int whence) const {
         return libcapio_lseek(this->fileno(), offset, whence);
     }
+
+    void flush() {
+        read_cache->flush();
+        write_cache->flush();
+    }
 };
 
 class CapioBinaryIOWrapper final : public _CapioIOWrapper {

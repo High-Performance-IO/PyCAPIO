@@ -4,6 +4,7 @@
 #include <pybind11/stl/filesystem.h>
 
 #include "include/_CapioIOWrapper.hpp"
+#include "include/_CapioOsPath.hpp"
 #include "include/_CapioScandirIteratorWrapper.hpp"
 
 PYBIND11_MODULE(_pycapio, m) {
@@ -51,6 +52,7 @@ PYBIND11_MODULE(_pycapio, m) {
         .def("writelines", &CapioTextIOWrapper::writelines, pybind11::arg("lines"))
         .def("fileno", &CapioTextIOWrapper::fileno)
         .def("close", &CapioTextIOWrapper::close)
+        .def("flush", [](CapioTextIOWrapper &self) { self.flush(); })
         .def("seek", &CapioTextIOWrapper::seek, pybind11::arg("offset") = 0,
              pybind11::arg("whence") = SEEK_SET)
         .def("__enter__", [](CapioTextIOWrapper &self) { return self; })
@@ -87,6 +89,7 @@ PYBIND11_MODULE(_pycapio, m) {
         .def("closed", [](CapioBinaryIOWrapper &self) { self.close(); })
         .def("seek", &CapioBinaryIOWrapper::seek, pybind11::arg("offset") = 0,
              pybind11::arg("whence") = SEEK_SET)
+        .def("flush", [](CapioBinaryIOWrapper &self) { self.flush(); })
         .def("__enter__", [](CapioBinaryIOWrapper &self) { return &self; })
         .def("__exit__", [](CapioBinaryIOWrapper &self, pybind11::args) { self.close(); });
 
@@ -115,4 +118,38 @@ PYBIND11_MODULE(_pycapio, m) {
             self.close();
             return false;
         });
+
+    pybind11::class_<_CapioOsPath>(m, "PyCapioPath")
+        .def_static("exists", &_CapioOsPath::exists, pybind11::arg("path"))
+        .def_static("isfile", &_CapioOsPath::isfile, pybind11::arg("path"))
+        .def_static("isdir", &_CapioOsPath::isdir, pybind11::arg("path"))
+        .def_static("getsize", &_CapioOsPath::getsize, pybind11::arg("path"))
+
+        .def_static("join",
+                    [](const pybind11::args &args) {
+                        if (args.empty()) {
+                            return std::string("");
+                        }
+
+                        std::string first = pybind11::cast<std::string>(args[0]);
+                        std::filesystem::path result(first);
+
+                        for (size_t i = 1; i < args.size(); ++i) {
+                            result /= pybind11::cast<std::string>(args[i]);
+                        }
+                        return result.string();
+                    })
+
+        .def_static("basename", &_CapioOsPath::basename, pybind11::arg("path"))
+        .def_static("dirname", &_CapioOsPath::dirname, pybind11::arg("path"))
+        .def_static("abspath", &_CapioOsPath::abspath, pybind11::arg("path"))
+        .def_static("splitext", &_CapioOsPath::splitext, pybind11::arg("path"))
+        .def_static("isabs", &_CapioOsPath::isabs, pybind11::arg("path"))
+        .def_static("normpath", &_CapioOsPath::normpath, pybind11::arg("path"))
+        .def_static("relpath", &_CapioOsPath::relpath, pybind11::arg("path"),
+                    pybind11::arg("start") = ".")
+        .def_static("getmtime", &_CapioOsPath::getmtime, pybind11::arg("path"))
+        .def_static("samefile", &_CapioOsPath::samefile, pybind11::arg("p1"), pybind11::arg("p2"))
+        .def_static("split", &_CapioOsPath::split, pybind11::arg("path"))
+        .def_static("normcase", &_CapioOsPath::normcase, pybind11::arg("path"));
 }

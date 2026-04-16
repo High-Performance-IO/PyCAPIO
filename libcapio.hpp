@@ -53,6 +53,7 @@ class StartupSemaphore final {
 };
 
 static int capio_server_thread_id = -1;
+static bool libcapio_initialized  = false;
 
 inline int bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
                                   const std::string &CAPIO_WORKFLOW_NAME,
@@ -177,7 +178,7 @@ inline int libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
               CAPIO_DIR.c_str(), CAPIO_APP_NAME.c_str(), CAPIO_WORKFLOW_NAME.c_str());
 
 #ifdef CAPIO_LOG
-    std::cout << libcapio_preamble << " WARNING: LIBCAPIO HAS BEEN COMPILED IN RELEASE MODE!"
+    std::cout << libcapio_preamble << " WARNING: LIBCAPIO HAS BEEN COMPILED IN DEBUG MODE!"
               << std::endl;
 #endif
 
@@ -193,7 +194,7 @@ inline int libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
         setenv("CAPIO_WORKFLOW_NAME", CAPIO_WORKFLOW_NAME.c_str(), 1);
     }
 
-    if (capio_server_thread_id > 0) {
+    if (libcapio_initialized) {
         return capio_server_thread_id;
     }
 
@@ -223,17 +224,19 @@ inline int libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
     }
 
     LOG("\n\n");
+    libcapio_initialized = true;
     return capio_server_thread_id;
 }
 
 inline void libcapio_teardown(const bool teardown_server = false) {
     START_LOG(gettid(), "libcapio_teardown()");
-    if (capio_server_thread_id != -1) {
+    if (libcapio_initialized) {
         exit_handler(NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-        if (teardown_server) {
+        if (teardown_server && capio_server_thread_id > 0) {
             kill(capio_server_thread_id, SIGTERM);
             capio_server_thread_id = -1;
         }
+        libcapio_initialized = false;
     }
 
     LOG("\n\n");
@@ -327,6 +330,20 @@ inline auto libcapio_lseek(int fd, long offset, int whence) {
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         throw std::runtime_error(
             "ERROR: libcapio readdir on non CAPIO directory not yet supported");
+    }
+
+    LOG("\n\n");
+    return result;
+}
+
+inline auto libcapio_stat(const char *path, struct stat *statbuf) {
+    START_LOG(gettid(), "call(path=%s)", path);
+    long result;
+    lstat_handler(reinterpret_cast<long>(path), reinterpret_cast<long>(statbuf), NULL, NULL, NULL, NULL, &result);
+
+    if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
+        throw std::runtime_error(
+            "ERROR: libcapio stat on non CAPIO directory not yet supported");
     }
 
     LOG("\n\n");

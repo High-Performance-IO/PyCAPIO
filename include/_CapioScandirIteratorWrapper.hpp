@@ -1,5 +1,7 @@
 #ifndef LIBCAPIO__CAPIOSCANDIRITERATORWRAPPER_HPP
 #define LIBCAPIO__CAPIOSCANDIRITERATORWRAPPER_HPP
+#include "../libcapio.hpp"
+
 #include <dirent.h>
 
 class CapioDirEntry {
@@ -33,7 +35,7 @@ class _CapioScandirIteratorWrapper {
   public:
     _CapioScandirIteratorWrapper(const std::filesystem::path &path) : path(path) {
 
-        if (capio_server_thread_id <= 0) {
+        if (!libcapio_initialized) {
             throw std::runtime_error("libcapio not initialized");
         }
 
