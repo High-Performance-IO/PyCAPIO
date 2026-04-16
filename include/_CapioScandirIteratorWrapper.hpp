@@ -33,7 +33,7 @@ class _CapioScandirIteratorWrapper {
   public:
     _CapioScandirIteratorWrapper(const std::filesystem::path &path) : path(path) {
 
-        if (!libcapio_initialized) {
+        if (capio_server_thread_id <= 0) {
             throw std::runtime_error("libcapio not initialized");
         }
 

@@ -3,8 +3,9 @@
 
 #ifndef __LIBCAPIO
 #define __LIBCAPIO
-#include <unistd.h>
+#include <signal.h>
 #include <thread>
+#include <unistd.h>
 #endif
 
 /**
@@ -44,24 +45,25 @@ class StartupSemaphore final {
     ~StartupSemaphore() {
         if (fp != -1) {
             close(fp);
-            unlink(lock_to_check.c_str());
+            shm_unlink(lock_to_check.c_str());
         }
     }
 
     explicit operator bool() const { return fp != -1; }
 };
 
-static bool libcapio_initialized = false;
+static int capio_server_thread_id = -1;
 
-inline void bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
-                                   const std::string &CAPIO_WORKFLOW_NAME,
-                                   const std::string &capio_server_exec_path,
-                                   const std::string &capio_cl_config,
-                                   const int await_server_timeout_seconds) {
+inline int bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
+                                  const std::string &CAPIO_WORKFLOW_NAME,
+                                  const std::string &capio_server_exec_path,
+                                  const std::string &capio_cl_config,
+                                  const int await_server_timeout_seconds) {
     bool server_is_started = false;
+    int server_thread_id   = -1;
 
     std::string shm_name = "/dev/shm/" + CAPIO_WORKFLOW_NAME;
-    if(std::filesystem::exists(shm_name)){
+    if (std::filesystem::exists(shm_name)) {
         std::cout << libcapio_preamble << " CAPIO server is already started" << std::endl;
         server_is_started = true;
     }
@@ -126,15 +128,19 @@ inline void bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
                              const_cast<char *>(NO_BACKEND_AFTER),
                              nullptr};
 
-            if (const pid_t pid = fork(); pid == 0) {
+            server_thread_id = fork();
+
+            if (server_thread_id == 0) {
                 execve(args[0], args, envPtrs.data());
                 std::cerr << libcapio_preamble << " " + capio_server_exec_path << std::endl;
                 std::cerr << libcapio_preamble << " EXECVE failure: " + std::string(strerror(errno))
                           << std::endl;
                 std::exit(EXIT_FAILURE);
-            } else if (pid > 0) {
-                std::cout << libcapio_preamble << " Started CAPIO server with  PID: " << pid
-                          << std::endl;
+            }
+
+            if (server_thread_id > 0) {
+                std::cout << libcapio_preamble
+                          << " Started CAPIO server with  PID: " << server_thread_id << std::endl;
                 sleep(await_server_timeout_seconds);
                 // jump to attaching to shm queues and await normal execution
             } else {
@@ -147,21 +153,22 @@ inline void bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
             std::this_thread::sleep_for(std::chrono::milliseconds(3000));
         }
     }
+    return server_thread_id;
 }
 
-inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
-                          const std::string &CAPIO_APP_NAME         = CAPIO_DEFAULT_APP_NAME,
-                          const std::string &CAPIO_WORKFLOW_NAME    = CAPIO_DEFAULT_WORKFLOW_NAME,
-                          const std::string &capio_server_exec_path = "capio_server",
-                          const std::string &capio_cl_config        = "",
-                          const int await_server_timeout_seconds    = 2) {
+inline int libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
+                         const std::string &CAPIO_APP_NAME         = CAPIO_DEFAULT_APP_NAME,
+                         const std::string &CAPIO_WORKFLOW_NAME    = CAPIO_DEFAULT_WORKFLOW_NAME,
+                         const std::string &capio_server_exec_path = "capio_server",
+                         const std::string &capio_cl_config        = "",
+                         const int await_server_timeout_seconds    = 2) {
 
     if (libcapio_preamble.empty()) {
         char host_name[HOST_NAME_MAX]{0};
-        if(gethostname(host_name, HOST_NAME_MAX) == -1){
-		    std::cout << "WARN: gethostname failed: " << std::strerror(errno) << std::endl;
-	    }
-	const auto pid    = getpid();
+        if (gethostname(host_name, HOST_NAME_MAX) == -1) {
+            std::cout << "WARN: gethostname failed: " << std::strerror(errno) << std::endl;
+        }
+        const auto pid    = getpid();
         libcapio_preamble = "[[LIBCAPIO::" + std::string(host_name) + "::" + CAPIO_APP_NAME +
                             "::" + std::to_string(pid) + "]] ";
     }
@@ -186,18 +193,20 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
         setenv("CAPIO_WORKFLOW_NAME", CAPIO_WORKFLOW_NAME.c_str(), 1);
     }
 
-    if (libcapio_initialized) {
-        return;
+    if (capio_server_thread_id > 0) {
+        return capio_server_thread_id;
     }
 
-    bootstrap_capio_server(CAPIO_DIR, CAPIO_WORKFLOW_NAME, capio_server_exec_path, capio_cl_config,
-                           await_server_timeout_seconds);
+    const auto thread_id =
+        bootstrap_capio_server(CAPIO_DIR, CAPIO_WORKFLOW_NAME, capio_server_exec_path,
+                               capio_cl_config, await_server_timeout_seconds);
+    if (thread_id > 0) {
+        capio_server_thread_id = thread_id;
+    }
 
     init_client(gettid());
     init_filesystem();
     initialize_new_thread();
-
-    libcapio_initialized = true;
 
     START_SYSCALL_LOGGING();
 
@@ -214,13 +223,17 @@ inline void libcapio_init(const std::filesystem::path &CAPIO_DIR    = ".",
     }
 
     LOG("\n\n");
+    return capio_server_thread_id;
 }
 
-inline void libcapio_teardown() {
+inline void libcapio_teardown(const bool teardown_server = false) {
     START_LOG(gettid(), "libcapio_teardown()");
-    if (libcapio_initialized) {
+    if (capio_server_thread_id != -1) {
         exit_handler(NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-        libcapio_initialized = false;
+        if (teardown_server) {
+            kill(capio_server_thread_id, SIGTERM);
+            capio_server_thread_id = -1;
+        }
     }
 
     LOG("\n\n");

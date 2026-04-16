@@ -26,12 +26,13 @@ PYBIND11_MODULE(_pycapio, m) {
     m.add_object("_cleanup", pybind11::capsule([]() { libcapio_teardown(); }));
 
     m.def("pycapio_init", &libcapio_init, "Initialize libcapio", pybind11::arg("CAPIO_DIR") = ".",
-          pybind11::arg("CAPIO_APP_NAME")              = CAPIO_DEFAULT_APP_NAME,
-          pybind11::arg("CAPIO_WORKFLOW_NAME")         = CAPIO_DEFAULT_WORKFLOW_NAME,
-          pybind11::arg("capio_server_exec_path")      = "capio_server",
-          pybind11::arg("capio_cl_configuration_file") = "",
-          pybind11::arg("await_server_timeout_seconds")         = 2);
-    m.def("pycapio_teardown", &libcapio_teardown, "Teardown libcapio");
+          pybind11::arg("CAPIO_APP_NAME")               = CAPIO_DEFAULT_APP_NAME,
+          pybind11::arg("CAPIO_WORKFLOW_NAME")          = CAPIO_DEFAULT_WORKFLOW_NAME,
+          pybind11::arg("capio_server_exec_path")       = "capio_server",
+          pybind11::arg("capio_cl_configuration_file")  = "",
+          pybind11::arg("await_server_timeout_seconds") = 2);
+    m.def("pycapio_teardown", &libcapio_teardown, "Teardown libcapio",
+          pybind11::arg("teardown_server") = false);
     m.def("pycapio_get_capio_dir", &get_capio_dir, "Get capio directory");
     m.def("pycapio_open", &libcapio_open, "Open a file", pybind11::arg("path"),
           pybind11::arg("flags"), pybind11::arg("mode") = 0);
