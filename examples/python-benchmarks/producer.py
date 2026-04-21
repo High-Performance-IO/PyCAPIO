@@ -3,7 +3,7 @@ import os
 import sys
 import time
 
-from pycapio.context import CapioContext
+from pycapio import CapioContext
 
 
 def benchmark_writer(filename, size_mb):

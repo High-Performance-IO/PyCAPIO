@@ -4,13 +4,13 @@ import pwd
 import stat
 import time
 
-from pycapio.context import CapioContext
+from pycapio import CapioContext
 
 
 @CapioContext(capio_dir="/tmp",
-              capio_app_name="consumer",
-              capio_workflow_name="list-directory",
-              capio_server_exec_path=os.environ["CAPIO_SERVER_BIN"],
+              app_name="consumer",
+              workflow_name="list-directory",
+              server_exec_path=os.environ["CAPIO_SERVER_BIN"],
               capio_cl_configuration_file=os.environ["CAPIO_CL_CONFIG"])
 def list_directory_raw():
     try:

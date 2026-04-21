@@ -4,7 +4,7 @@ import tty
 from datetime import datetime
 import os
 
-from pycapio.context import CapioContext
+from pycapio import CapioContext
 
 
 def get_keypress():
@@ -19,9 +19,9 @@ def get_keypress():
 
 
 @CapioContext(capio_dir="/tmp",
-              capio_app_name="producer",
-              capio_workflow_name="list-directory",
-              capio_server_exec_path=os.environ["CAPIO_SERVER_BIN"],
+              app_name="producer",
+              workflow_name="list-directory",
+              server_exec_path=os.environ["CAPIO_SERVER_BIN"],
               capio_cl_configuration_file=os.environ["CAPIO_CL_CONFIG"])
 def run_code():
     try:

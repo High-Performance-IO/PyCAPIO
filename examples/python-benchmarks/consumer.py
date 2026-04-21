@@ -1,7 +1,7 @@
 import sys
 import time
 import argparse
-from pycapio.context import CapioContext
+from pycapio import CapioContext
 
 def benchmark_reader(filename):
     chunk_size = 1024 * 1024  # 1MB chunk

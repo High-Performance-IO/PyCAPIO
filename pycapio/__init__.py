@@ -7,7 +7,7 @@ from os import path
 
 from ._pycapio import *
 
-__all__ = [name for name in globals() if not name.startswith("_")] + ["core", "CapioContext"]
+__all__ = [name for name in globals() if not name.startswith("_")] + ["CapioContext"]
 
 py_capio_initialized = False
 
