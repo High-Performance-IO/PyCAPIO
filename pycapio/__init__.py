@@ -1,23 +1,50 @@
-import atexit
-import builtins
 import io
 import os
 from functools import wraps
 from os import path
+from typing import Any
+
+import atexit
+import builtins
 
 from ._pycapio import *
 
 __all__ = [name for name in globals() if not name.startswith("_")] + ["CapioContext"]
 
+
+def _dump_context() -> dict[str, Any]:
+    return {
+        "builtins.open": builtins.open,
+        "os.mkdir": os.mkdir,
+        "os.makedirs": os.makedirs,
+        "os.scandir": os.scandir,
+        "io.open": io.open,
+        "os.listdir": os.listdir,
+        "os.path": os.path,
+    }
+
+
+def _restore_context(context: dict[str, Any]):
+    builtins.open = context["builtins.open"]
+    os.mkdir = context["os.mkdir"]
+    os.makedirs = context["os.makedirs"]
+    os.scandir = context["os.scandir"]
+    io.open = context["io.open"]
+    os.listdir = context["os.listdir"]
+    os.path = context["os.path"]
+
+def _patch_context():
+    builtins.open = open_proxy
+    os.mkdir = mkdir_proxy
+    os.makedirs = makedirs_proxy
+    os.scandir = PyCapioScandirWrapper
+    io.open = open_proxy
+    os.listdir = listdir_proxy
+    os.path = PyCapioPath
+
 py_capio_initialized = False
 
-_REAL_OPEN = builtins.open
-_REAL_MKDIR = os.mkdir
-_REAL_MAKEDIRS = os.makedirs
-_REAL_SCANDIR = os.scandir
-_REAL_IO_OPEN = io.open
-_REAL_LISTDIR = os.listdir
-_REAL_OS_PATH = os.path
+_BUILTIN_STACK = _dump_context()
 
 _CAPIO_DIR: str | None = None
 
@@ -25,12 +52,15 @@ _CAPIO_DIR: str | None = None
 def open_proxy(*args, **kwargs):
     global _CAPIO_DIR
 
-    if not args or not isinstance(args[0], (str, bytes, os.PathLike)):
-        return _REAL_OPEN(*args, **kwargs)
+    arg0 = args[0] if args else None
+    if not args or not isinstance(arg0, (str, bytes, os.PathLike)):
+        print(f"DEBUG: Type of arg0 is {type(arg0)}")
+        print(f"NOT A CAPIO PATH -> {arg0}")
+        return _BUILTIN_STACK["builtins.open"](*args, **kwargs)
 
-    target_path = _REAL_OS_PATH.abspath(args[0])
+    target_path = _BUILTIN_STACK["os.path"].abspath(args[0])
     if _CAPIO_DIR and (not target_path.startswith(_CAPIO_DIR) or ".python_history" in target_path):
-        return _REAL_OPEN(*args, **kwargs)
+        return _BUILTIN_STACK["builtins.open"](*args, **kwargs)
 
     flags_str = kwargs.get("mode", args[1] if len(args) > 1 else "r")
 
@@ -47,27 +77,27 @@ def open_proxy(*args, **kwargs):
 def mkdir_proxy(path_val, mode=0o777, *args, **kwargs):
     global _CAPIO_DIR
 
-    target_path = _REAL_OS_PATH.abspath(path_val)
+    target_path = _BUILTIN_STACK["os.path"].abspath(path_val)
     if _CAPIO_DIR and target_path.startswith(_CAPIO_DIR):
         return pycapio_mkdir(target_path, mode)
     else:
-        return _REAL_MKDIR(path_val, mode, *args, **kwargs)
+        return _BUILTIN_STACK["os.mkdir"](path_val, mode, *args, **kwargs)
 
 
 def makedirs_proxy(path_val, mode=0o777, *args, **kwargs):
     global _CAPIO_DIR
 
-    target_path = _REAL_OS_PATH.abspath(path_val)
+    target_path = _BUILTIN_STACK["os.path"].abspath(path_val)
     if _CAPIO_DIR and target_path.startswith(_CAPIO_DIR):
         return pycapio_mkdir(target_path, mode)
     else:
-        return _REAL_MAKEDIRS(path_val, mode, *args, **kwargs)
+        return _BUILTIN_STACK["os.makedirs"](path_val, mode, *args, **kwargs)
 
 
 def listdir_proxy(dirpath: str):
     global _CAPIO_DIR
 
-    dirpath = _REAL_OS_PATH.abspath(dirpath)
+    dirpath = _BUILTIN_STACK["os.path"].abspath(dirpath)
 
     if _CAPIO_DIR and dirpath.startswith(_CAPIO_DIR):
         directory_entries: list[str] = []
@@ -76,7 +106,7 @@ def listdir_proxy(dirpath: str):
 
         return directory_entries
 
-    return _REAL_LISTDIR(dirpath)
+    return _BUILTIN_STACK["os.listdir"](dirpath)
 
 
 def CapioContext(*,
@@ -97,7 +127,7 @@ def CapioContext(*,
             global py_capio_initialized
             global _CAPIO_DIR
             if not py_capio_initialized:
-                _CAPIO_DIR = _REAL_OS_PATH.abspath(capio_dir)
+                _CAPIO_DIR = _BUILTIN_STACK["os.path"].abspath(capio_dir)
                 pycapio_init(CAPIO_DIR=_CAPIO_DIR,
                              CAPIO_WORKFLOW_NAME=workflow_name,
                              CAPIO_APP_NAME=app_name,
@@ -107,24 +137,13 @@ def CapioContext(*,
                 py_capio_initialized = True
                 atexit.register(pycapio_teardown, teardown_server)
 
-            builtins.open = open_proxy
-            os.mkdir = mkdir_proxy
-            os.makedirs = makedirs_proxy
-            os.scandir = PyCapioScandirWrapper
-            io.open = open_proxy
-            os.listdir = listdir_proxy
-            os.path = PyCapioPath
+            context = _dump_context()
+            _patch_context()
 
             try:
                 return func(*args, **kwargs)
             finally:
-                builtins.open = _REAL_OPEN
-                os.mkdir = _REAL_MKDIR
-                os.makedirs = _REAL_MAKEDIRS
-                os.scandir = _REAL_SCANDIR
-                io.open = _REAL_IO_OPEN
-                os.listdir = _REAL_LISTDIR
-                os.path = _REAL_OS_PATH
+                _restore_context(context)
 
         return wrapper
 

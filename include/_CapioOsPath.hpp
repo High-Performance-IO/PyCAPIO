@@ -91,6 +91,14 @@ class _CapioOsPath {
 
     // On Unix, normcase simply returns the path unchanged.
     static std::string normcase(const std::string &p) { return p; }
+
+    static std::string realpath(const std::string &path) {
+        try {
+            return std::filesystem::canonical(path).string();
+        } catch (const std::filesystem::filesystem_error &) {
+            return "";
+        }
+    }
 };
 
 #endif // LIBCAPIO__CAPIOOSPATH_HPP

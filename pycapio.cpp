@@ -151,5 +151,6 @@ PYBIND11_MODULE(_pycapio, m) {
         .def_static("getmtime", &_CapioOsPath::getmtime, pybind11::arg("path"))
         .def_static("samefile", &_CapioOsPath::samefile, pybind11::arg("p1"), pybind11::arg("p2"))
         .def_static("split", &_CapioOsPath::split, pybind11::arg("path"))
-        .def_static("normcase", &_CapioOsPath::normcase, pybind11::arg("path"));
+        .def_static("normcase", &_CapioOsPath::normcase, pybind11::arg("path"))
+        .def_static("realpath", &_CapioOsPath::realpath, pybind11::arg("path"));
 }
