@@ -37,7 +37,7 @@ def _patch_context():
     builtins.open = open_proxy
     os.mkdir = mkdir_proxy
     os.makedirs = makedirs_proxy
-    os.scandir = PyCapioScandirWrapper
+    os.scandir = scandir_proxy
     io.open = open_proxy
     os.listdir = listdir_proxy
     os.path = PyCapioPath
@@ -48,6 +48,13 @@ _BUILTIN_STACK = _dump_context()
 
 _CAPIO_DIR: str | None = None
 
+
+def scandir_proxy(path: str):
+    global _CAPIO_DIR
+    target_path = _BUILTIN_STACK["os.path"].abspath(path)
+    if _CAPIO_DIR and target_path.startswith(_CAPIO_DIR):
+        return PyCapioScandirWrapper(path)
+    return _BUILTIN_STACK["os.scandir"](path)
 
 def open_proxy(*args, **kwargs):
     global _CAPIO_DIR
