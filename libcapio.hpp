@@ -339,11 +339,11 @@ inline auto libcapio_lseek(int fd, long offset, int whence) {
 inline auto libcapio_stat(const char *path, struct stat *statbuf) {
     START_LOG(gettid(), "call(path=%s)", path);
     long result;
-    lstat_handler(reinterpret_cast<long>(path), reinterpret_cast<long>(statbuf), NULL, NULL, NULL, NULL, &result);
+    lstat_handler(reinterpret_cast<long>(path), reinterpret_cast<long>(statbuf), NULL, NULL, NULL,
+                  NULL, &result);
 
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
-        throw std::runtime_error(
-            "ERROR: libcapio stat on non CAPIO directory not yet supported");
+        throw std::runtime_error("ERROR: libcapio stat on non CAPIO directory not yet supported");
     }
 
     LOG("\n\n");

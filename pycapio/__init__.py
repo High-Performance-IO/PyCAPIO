@@ -72,10 +72,16 @@ def open_proxy(*args, **kwargs):
     flags_str = kwargs.get("mode", args[1] if len(args) > 1 else "r")
 
     pycapio_flags = 0
-    if "w" in flags_str: pycapio_flags |= FILE_MODES["O_WRONLY"] | FILE_MODES["O_CREAT"]
-    if "a" in flags_str: pycapio_flags |= FILE_MODES["O_APPEND"]
-    if "r" in flags_str: pycapio_flags |= FILE_MODES["O_RDONLY"]
-    if "+" in flags_str: pycapio_flags |= FILE_MODES["O_RDWR"]
+    if "+" in flags_str:
+        pycapio_flags |= FILE_MODES["O_RDWR"]
+        if "w" in flags_str:
+            pycapio_flags |= FILE_MODES["O_CREAT"]
+        if "a" in flags_str:
+            pycapio_flags |= FILE_MODES["O_APPEND"]
+    else:
+        if "w" in flags_str: pycapio_flags |= FILE_MODES["O_WRONLY"] | FILE_MODES["O_CREAT"]
+        if "a" in flags_str: pycapio_flags |= FILE_MODES["O_WRONLY"] | FILE_MODES["O_APPEND"]
+        if "r" in flags_str: pycapio_flags |= FILE_MODES["O_RDONLY"]
 
     fd = pycapio_open(target_path, pycapio_flags, 0o777)
     return PyCapioBinaryIOWrapper(fd) if "b" in flags_str else PyCapioTextIOWrapper(fd)

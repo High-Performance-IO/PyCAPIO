@@ -30,7 +30,7 @@ endif ()
 FetchContent_Declare(
         capio
         GIT_REPOSITORY https://github.com/High-Performance-IO/capio.git
-        GIT_TAG f336af207abcc27c1a3b3b858bac4226d9b87cec
+        GIT_TAG master
         CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
         -DCAPIO_LOG=${CAPIO_LOG}
@@ -56,6 +56,8 @@ install(
 
 pybind11_add_module(_pycapio pycapio.cpp)
 
+target_compile_definitions(_pycapio PRIVATE PYCAPIO_BINDINGS)
+
 message(STATUS "CAPIO_PREFIX = ${capio_SOURCE_DIR}")
 
 target_include_directories(_pycapio PRIVATE
@@ -78,56 +80,56 @@ install(
 # Libcapio example targets
 #############################
 
-file(GLOB example_sources
-        CONFIGURE_DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/examples/cpp/*.cpp"
-)
+#file(GLOB example_sources
+#        CONFIGURE_DEPENDS
+#        "${CMAKE_CURRENT_SOURCE_DIR}/examples/cpp/*.cpp"
+#)
 
-foreach (example_src ${example_sources})
-    get_filename_component(example_name ${example_src} NAME_WE)
-    add_executable(${example_name} ${example_src})
+#foreach (example_src ${example_sources})
+#    get_filename_component(example_name ${example_src} NAME_WE)
+#    add_executable(${example_name} ${example_src})
 
-    target_include_directories(${example_name} PRIVATE
-            ${capio_SOURCE_DIR}/capio
-            ${capio_SOURCE_DIR}/capio/posix
-    )
+#    target_include_directories(${example_name} PRIVATE
+#            ${capio_SOURCE_DIR}/capio
+#            ${capio_SOURCE_DIR}/capio/posix
+#    )
 
-    target_compile_options(
-            ${example_name}
-            PRIVATE
-            $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
-    )
+#    target_compile_options(
+#            ${example_name}
+#            PRIVATE
+#            $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
+#    )
 
-    target_link_libraries(${example_name} PRIVATE rt)
+#    target_link_libraries(${example_name} PRIVATE rt)
 
-    install(
-            TARGETS ${example_name}
-            RUNTIME DESTINATION bin
-    )
-endforeach ()
+#    install(
+#            TARGETS ${example_name}
+#            RUNTIME DESTINATION bin
+#    )
+#endforeach ()
 
 
 ##############################
 # CapioTextIOWrapper.cpp test target
 #############################
 
-add_executable(test_CapioTextIOWrapper tests/CapioTextIOWrapper.cpp)
+#add_executable(test_CapioTextIOWrapper tests/CapioTextIOWrapper.cpp)
 
-target_include_directories(test_CapioTextIOWrapper PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${capio_SOURCE_DIR}/capio
-        ${capio_SOURCE_DIR}/capio/posix
-)
+#target_include_directories(test_CapioTextIOWrapper PRIVATE
+#        ${CMAKE_CURRENT_SOURCE_DIR}
+#        ${capio_SOURCE_DIR}/capio
+#        ${capio_SOURCE_DIR}/capio/posix
+#)
 
-target_compile_options(
-        test_CapioTextIOWrapper
-        PRIVATE
-        $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
-)
+#target_compile_options(
+#        test_CapioTextIOWrapper
+#        PRIVATE
+#        $<$<CXX_COMPILER_ID:GNU,Clang>:-Wall -Wextra -Wpedantic>
+#)
 
-target_link_libraries(test_CapioTextIOWrapper PRIVATE rt)
+#target_link_libraries(test_CapioTextIOWrapper PRIVATE rt)
 
-install(
-        TARGETS test_CapioTextIOWrapper
-        RUNTIME DESTINATION bin
-)
+#install(
+#        TARGETS test_CapioTextIOWrapper
+#        RUNTIME DESTINATION bin
+#)

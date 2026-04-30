@@ -2,21 +2,39 @@
 #define LIBCAPIO_PYCAPIOTEXTIOWRAPPER_HPP
 #include <cstdint>
 
+#ifndef PYCAPIO_BINDINGS
+
+namespace pybind11 {
+class stop_iteration : public std::exception {
+  public:
+    stop_iteration()           = default;
+    ~stop_iteration() override = default;
+};
+} // namespace pybind11
+#endif
+
 // TODO: make this class a template
+// TODO: readline and readlines to use _CapioIOWrapperStopIteration
 class _CapioIOWrapper {
 
     const int _file_descriptor = -1;
     const uint64_t _chunk_size;
     std::string _buffer;
-    bool _closed = false;
+    bool _closed    = false;
+    bool _exhausted = false;
 
   public:
     // Default read of 16KB
     _CapioIOWrapper(const int fd, const uint64_t chunk_size = 16 * 1024)
         : _file_descriptor(fd), _chunk_size(chunk_size) {}
 
-    auto write(const std::string &text) const {
-        return libcapio_write(_file_descriptor, text.data(), text.size());
+    [[nodiscard]] auto write(const std::string &text) const {
+        const auto write_size = libcapio_write(_file_descriptor, text.data(), text.size());
+        if (write_size != text.size()) {
+            trigger_stack_trace("write failed: received from libcapio offset: " +
+                                std::to_string(write_size));
+        }
+        return write_size;
     }
 
     auto writelines(const std::vector<std::string> &lines) const {
@@ -87,6 +105,18 @@ class _CapioIOWrapper {
         }
     }
 
+    std::string next() {
+        if (_exhausted) {
+            throw pybind11::stop_iteration();
+        }
+        std::string line = readline();
+        if (line.empty()) {
+            _exhausted = true;
+            throw pybind11::stop_iteration();
+        }
+        return line;
+    }
+
     std::vector<std::string> readlines() {
         std::vector<std::string> lines;
         while (true) {
@@ -110,24 +140,34 @@ class _CapioIOWrapper {
         return libcapio_lseek(this->fileno(), offset, whence);
     }
 
-    void flush() {
+    static void flush() {
         read_cache->flush();
         write_cache->flush();
     }
+
+    [[nodiscard]] bool closed() const { return this->_closed; }
 };
 
 class CapioBinaryIOWrapper final : public _CapioIOWrapper {
     using _CapioIOWrapper::_CapioIOWrapper;
 
   public:
-    ~CapioBinaryIOWrapper() { close(); }
+    ~CapioBinaryIOWrapper() {
+        flush();
+        close();
+    }
+    CapioBinaryIOWrapper &iter() { return *this; }
 };
 
 class CapioTextIOWrapper final : public _CapioIOWrapper {
     using _CapioIOWrapper::_CapioIOWrapper;
 
   public:
-    ~CapioTextIOWrapper() { close(); }
+    ~CapioTextIOWrapper() {
+        flush();
+        close();
+    }
+    CapioTextIOWrapper &iter() { return *this; }
 };
 
 #endif // LIBCAPIO_PYCAPIOTEXTIOWRAPPER_HPP

@@ -14,17 +14,17 @@ class CapioDirEntry {
     CapioDirEntry(const std::filesystem::path &base, const dirent64 &ent)
         : base_path(base), name_(ent.d_name), ino_(ent.d_ino), type_(ent.d_type) {}
 
-    std::string name() const { return name_; }
+    [[nodiscard]] std::string name() const { return name_; }
 
-    std::string path() const { return (base_path / name_).string(); }
+    [[nodiscard]] std::string path() const { return (base_path / name_).string(); }
 
-    uint64_t inode() const { return ino_; }
+    [[nodiscard]] uint64_t inode() const { return ino_; }
 
-    bool is_dir(bool follow_symlinks = true) const { return type_ == DT_DIR; }
+    [[nodiscard]] bool is_dir(bool follow_symlinks = true) const { return type_ == DT_DIR; }
 
-    bool is_file(bool follow_symlinks = true) const { return type_ == DT_REG; }
+    [[nodiscard]] bool is_file(bool follow_symlinks = true) const { return type_ == DT_REG; }
 
-    bool is_symlink() const { return type_ == DT_LNK; }
+    [[nodiscard]] bool is_symlink() const { return type_ == DT_LNK; }
 };
 
 class _CapioScandirIteratorWrapper {

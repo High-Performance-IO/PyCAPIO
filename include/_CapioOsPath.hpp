@@ -27,7 +27,7 @@ class _CapioOsPath {
         return (statbuf.st_mode & S_IFMT) == S_IFREG;
     }
 
-    static bool isdir(const std::string &path) { return !_CapioOsPath::isfile(path); }
+    static bool isdir(const std::string &path) { return !isfile(path); }
 
     static uintmax_t getsize(const std::string &path) {
         struct stat statbuf{};
