@@ -1,17 +1,6 @@
-#ifndef LIBCAPIO_PYCAPIOTEXTIOWRAPPER_HPP
-#define LIBCAPIO_PYCAPIOTEXTIOWRAPPER_HPP
+#ifndef LIBCAPIO_IOWRAPPER_HPP
+#define LIBCAPIO_IOWRAPPER_HPP
 #include <cstdint>
-
-#ifndef PYCAPIO_BINDINGS
-
-namespace pybind11 {
-class stop_iteration : public std::exception {
-  public:
-    stop_iteration()           = default;
-    ~stop_iteration() override = default;
-};
-} // namespace pybind11
-#endif
 
 enum class IOMode { Text, Binary };
 
@@ -151,13 +140,13 @@ template <IOMode Mode> class IOWrapper {
 
     std::vector<ReturnType> readlines() {
         std::vector<ReturnType> lines;
-        while (true) {
-            std::string line = readline_raw();
-            if (line.empty()) {
-                return lines;
+        try {
+            while (true) {
+                lines.push_back(next());
             }
-            lines.push_back(wrap(std::move(line)));
+        } catch (const pybind11::stop_iteration &) {
         }
+        return lines;
     }
 
     [[nodiscard]] auto fileno() const { return _file_descriptor; }
@@ -169,7 +158,7 @@ template <IOMode Mode> class IOWrapper {
         }
     }
 
-    [[nodiscard]] auto seek(int offset, int whence) const {
+    [[nodiscard]] auto seek(const int offset, const int whence) const {
         return libcapio_lseek(fileno(), offset, whence);
     }
 
@@ -186,4 +175,4 @@ template <IOMode Mode> class IOWrapper {
 using CapioTextIOWrapper   = IOWrapper<IOMode::Text>;
 using CapioBinaryIOWrapper = IOWrapper<IOMode::Binary>;
 
-#endif // LIBCAPIO_PYCAPIOTEXTIOWRAPPER_HPP
+#endif // LIBCAPIO_IOWRAPPER_HPP
