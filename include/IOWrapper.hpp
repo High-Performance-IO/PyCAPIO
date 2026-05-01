@@ -172,7 +172,4 @@ template <IOMode Mode> class IOWrapper {
     IOWrapper &iter() { return *this; }
 };
 
-using CapioTextIOWrapper   = IOWrapper<IOMode::Text>;
-using CapioBinaryIOWrapper = IOWrapper<IOMode::Binary>;
-
 #endif // LIBCAPIO_IOWRAPPER_HPP

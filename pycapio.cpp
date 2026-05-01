@@ -25,31 +25,25 @@ void register_IO_wrapper(py11::module &m, const char *name, uint64_t default_chu
         .def("close", &W::close)
         .def("flush", [](W &self) { self.flush(); })
         .def("seek", &W::seek, py11::arg("offset") = 0, py11::arg("whence") = SEEK_SET)
-        .def("closed", [](W &self) { return self.closed(); })
+        .def("closed", &W::closed)
         .def("__iter__", &W::iter, py11::return_value_policy::reference)
         .def("__next__", &W::next)
         .def("__enter__", [](W &self) { return &self; })
         .def("__exit__", [](W &self, py11::args) { self.close(); });
 }
 
+using namespace pybind11::literals;
+
 PYBIND11_MODULE(_pycapio, m) {
 
-    m.doc() = "libcapio bindings for python";
+    m.doc() = "Python bindings for the CAPIO methodology";
 
-    py11::dict file_modes;
-
-    file_modes["O_RDONLY"] = O_RDONLY;
-    file_modes["O_WRONLY"] = O_WRONLY;
-    file_modes["O_RDWR"]   = O_RDWR;
-    file_modes["O_CREAT"]  = O_CREAT;
-    file_modes["O_APPEND"] = O_APPEND;
-
-    m.attr("FILE_MODES") = file_modes;
+    m.attr("FILE_MODES") =
+        py11::dict("O_RDONLY"_a = O_RDONLY, "O_WRONLY"_a = O_WRONLY, "O_RDWR"_a = O_RDWR,
+                   "O_CREAT"_a = O_CREAT, "O_APPEND"_a = O_APPEND);
 
     m.attr("CAPIO_DEFAULT_APP_NAME")      = CAPIO_DEFAULT_APP_NAME;
     m.attr("CAPIO_DEFAULT_WORKFLOW_NAME") = CAPIO_DEFAULT_WORKFLOW_NAME;
-
-    m.add_object("_cleanup", py11::capsule([]() { libcapio_teardown(); }));
 
     m.def("pycapio_init", &libcapio_init, "Initialize libcapio", py11::arg("CAPIO_DIR") = ".",
           py11::arg("CAPIO_APP_NAME")               = CAPIO_DEFAULT_APP_NAME,
@@ -57,9 +51,12 @@ PYBIND11_MODULE(_pycapio, m) {
           py11::arg("capio_server_exec_path")       = "capio_server",
           py11::arg("capio_cl_configuration_file")  = "",
           py11::arg("await_server_timeout_seconds") = 2);
+
     m.def("pycapio_teardown", &libcapio_teardown, "Teardown libcapio",
           py11::arg("teardown_server") = false);
+
     m.def("pycapio_get_capio_dir", &get_capio_dir, "Get capio directory");
+
     m.def("pycapio_open", &libcapio_open, "Open a file", py11::arg("path"), py11::arg("flags"),
           py11::arg("mode") = 0);
 
@@ -67,6 +64,7 @@ PYBIND11_MODULE(_pycapio, m) {
           py11::arg("flags") = 0x777);
 
     register_IO_wrapper<IOMode::Text>(m, "PyCapioTextIOWrapper", 4096);
+
     register_IO_wrapper<IOMode::Binary>(m, "PyCapioBinaryIOWrapper", 16 * 1024);
 
     py11::class_<CapioDirEntry>(m, "DirEntry")
@@ -86,27 +84,27 @@ PYBIND11_MODULE(_pycapio, m) {
         .def(
             "__enter__", [](ScandirIteratorWrapper &self) { return &self; },
             py11::return_value_policy::reference_internal)
-        .def("__exit__", [](ScandirIteratorWrapper &self, py11::args) {
+        .def("__exit__", [](ScandirIteratorWrapper &self, const py11::args &) {
             self.close();
             return false;
         });
 
     py11::class_<OsPath>(m, "PyCapioPath")
-        .def_static("exists", &OsPath::exists, py11::arg("path"))
-        .def_static("isfile", &OsPath::isfile, py11::arg("path"))
-        .def_static("isdir", &OsPath::isdir, py11::arg("path"))
-        .def_static("getsize", &OsPath::getsize, py11::arg("path"))
+        .def_static("exists", &OsPath::exists)
+        .def_static("isfile", &OsPath::isfile)
+        .def_static("isdir", &OsPath::isdir)
+        .def_static("getsize", &OsPath::getsize)
         .def_static("join", &OsPath::join)
-        .def_static("basename", &OsPath::basename, py11::arg("path"))
-        .def_static("dirname", &OsPath::dirname, py11::arg("path"))
-        .def_static("abspath", &OsPath::abspath, py11::arg("path"))
-        .def_static("splitext", &OsPath::splitext, py11::arg("path"))
-        .def_static("isabs", &OsPath::isabs, py11::arg("path"))
-        .def_static("normpath", &OsPath::normpath, py11::arg("path"))
+        .def_static("basename", &OsPath::basename)
+        .def_static("dirname", &OsPath::dirname)
+        .def_static("abspath", &OsPath::abspath)
+        .def_static("splitext", &OsPath::splitext)
+        .def_static("isabs", &OsPath::isabs)
+        .def_static("normpath", &OsPath::normpath)
         .def_static("relpath", &OsPath::relpath, py11::arg("path"), py11::arg("start") = ".")
-        .def_static("getmtime", &OsPath::getmtime, py11::arg("path"))
-        .def_static("samefile", &OsPath::samefile, py11::arg("p1"), py11::arg("p2"))
-        .def_static("split", &OsPath::split, py11::arg("path"))
-        .def_static("normcase", &OsPath::normcase, py11::arg("path"))
-        .def_static("realpath", &OsPath::realpath, py11::arg("path"));
+        .def_static("getmtime", &OsPath::getmtime)
+        .def_static("samefile", &OsPath::samefile)
+        .def_static("split", &OsPath::split)
+        .def_static("normcase", &OsPath::normcase)
+        .def_static("realpath", &OsPath::realpath);
 }
