@@ -4,7 +4,7 @@
 #include <filesystem>
 #include <string>
 
-class _CapioOsPath {
+class OsPath {
   public:
     /**
      *   LIBCAPIO METHODS
@@ -40,12 +40,6 @@ class _CapioOsPath {
     /**
      *  NON LIBCAPIO METHODS
      **/
-
-    template <typename... Args> static std::string join(const std::string &first, Args... args) {
-        std::filesystem::path result(first);
-        ([&](const std::string &part) { result /= part; }(args), ...);
-        return result.string();
-    }
 
     static std::string basename(const std::string &path) {
         return std::filesystem::path(path).filename().string();
@@ -98,6 +92,20 @@ class _CapioOsPath {
         } catch (const std::filesystem::filesystem_error &) {
             return "";
         }
+    }
+
+    static std::string join(const std::string &path1, const std::string &path2) {
+        if (path1.empty() && path2.empty()) {
+            return "";
+        }
+        if (path1.empty() && !path2.empty()) {
+            return path2;
+        }
+        if (path2.empty() && !path1.empty()) {
+            return path1;
+        }
+
+        return std::filesystem::path(path1) / path2;
     }
 };
 

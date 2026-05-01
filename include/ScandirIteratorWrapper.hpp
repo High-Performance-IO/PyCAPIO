@@ -20,20 +20,24 @@ class CapioDirEntry {
 
     [[nodiscard]] uint64_t inode() const { return ino_; }
 
-    [[nodiscard]] bool is_dir(bool follow_symlinks = true) const { return type_ == DT_DIR; }
+    [[nodiscard]] bool is_dir([[maybe_unused]] bool follow_symlinks = true) const {
+        return type_ == DT_DIR;
+    }
 
-    [[nodiscard]] bool is_file(bool follow_symlinks = true) const { return type_ == DT_REG; }
+    [[nodiscard]] bool is_file([[maybe_unused]] bool follow_symlinks = true) const {
+        return type_ == DT_REG;
+    }
 
     [[nodiscard]] bool is_symlink() const { return type_ == DT_LNK; }
 };
 
-class _CapioScandirIteratorWrapper {
+class ScandirIteratorWrapper {
     std::filesystem::path path;
     int file_descriptor = -1;
     bool finished       = false;
 
   public:
-    _CapioScandirIteratorWrapper(const std::filesystem::path &path) : path(path) {
+    ScandirIteratorWrapper(const std::filesystem::path &path) : path(path) {
 
         if (!libcapio_initialized) {
             throw std::runtime_error("libcapio not initialized");
@@ -45,7 +49,7 @@ class _CapioScandirIteratorWrapper {
         }
     }
 
-    ~_CapioScandirIteratorWrapper() { close(); }
+    ~ScandirIteratorWrapper() { close(); }
 
     CapioDirEntry next() {
         if (finished) {
@@ -53,7 +57,7 @@ class _CapioScandirIteratorWrapper {
         }
 
         dirent64 ent{};
-        if (libcapio_readdir(file_descriptor, &ent) == NULL) {
+        if (libcapio_readdir(file_descriptor, &ent) == 0) {
             finished = true;
             throw pybind11::stop_iteration();
         }
@@ -65,7 +69,7 @@ class _CapioScandirIteratorWrapper {
         return {path, ent};
     }
 
-    _CapioScandirIteratorWrapper &iter() { return *this; }
+    ScandirIteratorWrapper &iter() { return *this; }
 
     void close() {
         if (file_descriptor != -1) {
