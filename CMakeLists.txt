@@ -28,15 +28,15 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 endif ()
 
 FetchContent_Declare(
-        capios
+        capio
         GIT_REPOSITORY https://github.com/High-Performance-IO/capio.git
         GIT_TAG master
         CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-        -DCAPIO_LOG=${CAPIO_LOG}
-        -DCAPIO_BUILD_POSIX=OFF
 )
 
+set(CAPIO_LOG ${CAPIO_LOG} CACHE BOOL "" FORCE)
+set(CAPIO_BUILD_POSIX False CACHE BOOL "" FORCE)
 
 FetchContent_MakeAvailable(pybind11 capio)
 

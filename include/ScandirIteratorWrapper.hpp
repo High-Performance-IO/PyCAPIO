@@ -1,6 +1,6 @@
 #ifndef LIBCAPIO__CAPIOSCANDIRITERATORWRAPPER_HPP
 #define LIBCAPIO__CAPIOSCANDIRITERATORWRAPPER_HPP
-#include "../libcapio.hpp"
+#include "libcapio.hpp"
 
 #include <dirent.h>
 
@@ -40,12 +40,12 @@ class ScandirIteratorWrapper {
     ScandirIteratorWrapper(const std::filesystem::path &path) : path(path) {
 
         if (!libcapio_initialized) {
-            throw std::runtime_error("libcapio not initialized");
+            throw PyCapioException("libcapio not initialized");
         }
 
         file_descriptor = libcapio_open(path.string().c_str(), O_RDONLY);
         if (file_descriptor < 0) {
-            throw std::runtime_error("libcapio_open failed");
+            throw PyCapioException("libcapio_open failed");
         }
     }
 

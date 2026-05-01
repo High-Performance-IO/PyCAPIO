@@ -3,6 +3,8 @@
 
 #ifndef __LIBCAPIO
 #define __LIBCAPIO
+#include "PyCapioException.hpp"
+
 #include <signal.h>
 #include <thread>
 #include <unistd.h>
@@ -115,9 +117,7 @@ inline int bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
 
             // Fail if capio_server binary executable does not exists
             if (!std::filesystem::exists(resolved_capio_server_exec_path)) {
-                std::cerr << libcapio_preamble
-                          << " Could not locate capio_server executable in PATH!" << std::endl;
-                std::exit(EXIT_FAILURE);
+                throw PyCapioException("Could not locate capio_server executable in PATH!");
             }
 
             char *args[6] = {const_cast<char *>(resolved_capio_server_exec_path.c_str()),
@@ -133,10 +133,8 @@ inline int bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
 
             if (server_thread_id == 0) {
                 execve(args[0], args, envPtrs.data());
-                std::cerr << libcapio_preamble << " " + capio_server_exec_path << std::endl;
-                std::cerr << libcapio_preamble << " EXECVE failure: " + std::string(strerror(errno))
-                          << std::endl;
-                std::exit(EXIT_FAILURE);
+                throw PyCapioException(libcapio_preamble + capio_server_exec_path + "\n" +
+                                       " EXECVE failure: " + std::string(strerror(errno)));
             }
 
             if (server_thread_id > 0) {
@@ -300,8 +298,7 @@ inline auto libcapio_readdir(const int fd, dirent64 *entry) {
     getdents_handler_impl(fd, reinterpret_cast<long>(entry), sizeof(linux_dirent64), &result, true);
 
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
-        throw std::runtime_error(
-            "ERROR: libcapio readdir on non CAPIO directory not yet supported");
+        throw PyCapioException("ERROR: libcapio readdir on non CAPIO directory not yet supported");
     }
 
     LOG("\n\n");
@@ -314,8 +311,7 @@ inline auto libcapio_mkdir(const char *path, int mode) {
     mkdir_handler(reinterpret_cast<long>(path), mode, NULL, NULL, NULL, NULL, &result);
 
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
-        throw std::runtime_error(
-            "ERROR: libcapio readdir on non CAPIO directory not yet supported");
+        throw PyCapioException("ERROR: libcapio readdir on non CAPIO directory not yet supported");
     }
 
     LOG("\n\n");
@@ -328,8 +324,7 @@ inline auto libcapio_lseek(int fd, long offset, int whence) {
     lseek_handler(fd, offset, whence, NULL, NULL, NULL, &result);
 
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
-        throw std::runtime_error(
-            "ERROR: libcapio readdir on non CAPIO directory not yet supported");
+        throw PyCapioException("ERROR: libcapio readdir on non CAPIO directory not yet supported");
     }
 
     LOG("\n\n");
@@ -343,7 +338,7 @@ inline auto libcapio_stat(const char *path, struct stat *statbuf) {
                   NULL, &result);
 
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
-        throw std::runtime_error("ERROR: libcapio stat on non CAPIO directory not yet supported");
+        throw PyCapioException("ERROR: libcapio stat on non CAPIO directory not yet supported");
     }
 
     LOG("\n\n");

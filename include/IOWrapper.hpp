@@ -57,8 +57,8 @@ template <IOMode Mode> class IOWrapper {
     auto write(const std::string &text) const {
         const auto write_size = libcapio_write(_file_descriptor, text.data(), text.size());
         if (write_size != static_cast<ssize_t>(text.size())) {
-            trigger_stack_trace("write failed: received from libcapio offset: " +
-                                std::to_string(write_size));
+            throw PyCapioException("write failed: received from libcapio offset: " +
+                             std::to_string(write_size));
         }
         return write_size;
     }

@@ -1,9 +1,9 @@
-#include "libcapio.hpp"
+#include "include/libcapio.hpp"
 #include "pybind11/pybind11.h"
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
-#include "include/stack_trace.hpp"
+#include "include/PyCapioException.hpp"
 
 #include "include/IOWrapper.hpp"
 #include "include/OsPath.hpp"
