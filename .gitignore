@@ -1,7 +1,7 @@
 *build*
 .idea
 files_location*.txt
-venv
+*venv*
 *egg-info*
 capio_logs
 *.log

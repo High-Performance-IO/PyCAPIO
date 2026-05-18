@@ -1,13 +1,13 @@
-#include "include/libcapio.hpp"
+#include "../include/libcapio.hpp"
 #include "pybind11/pybind11.h"
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
-#include "include/PyCapioException.hpp"
+#include "../include/PyCapioException.hpp"
 
-#include "include/IOWrapper.hpp"
-#include "include/OsPath.hpp"
-#include "include/ScandirIteratorWrapper.hpp"
+#include "../include/IOWrapper.hpp"
+#include "../include/OsPath.hpp"
+#include "../include/ScandirIteratorWrapper.hpp"
 
 namespace py11 = pybind11;
 

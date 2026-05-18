@@ -54,7 +54,7 @@ install(
 # PYBIND11 TARGET
 ########################
 
-pybind11_add_module(_pycapio pycapio.cpp)
+pybind11_add_module(_pycapio src/pycapio.cpp)
 
 target_compile_definitions(_pycapio PRIVATE PYCAPIO_BINDINGS)
 
