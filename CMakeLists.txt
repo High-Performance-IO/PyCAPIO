@@ -56,6 +56,11 @@ install(
 
 pybind11_add_module(_pycapio src/pycapio.cpp)
 
+# patch server_println by copying server_println.hpp from server/utils/server_println.hpp to posix/utils/server_println.hpp
+file(COPY "${capio_SOURCE_DIR}/capio/server/include/utils/server_println.hpp"
+        DESTINATION "${capio_SOURCE_DIR}/capio/posix/utils/")
+message(WARNING "WARN: patch for server_println.hpp copied to posix has been applied!")
+
 target_compile_definitions(_pycapio PRIVATE PYCAPIO_BINDINGS)
 
 message(STATUS "CAPIO_PREFIX = ${capio_SOURCE_DIR}")
