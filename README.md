@@ -1,7 +1,7 @@
 # PyCAPIO
 
 [![codecov](https://codecov.io/gh/High-Performance-IO/PyCAPIO/graph/badge.svg?token=YOUR_TOKEN)](https://codecov.io/gh/OWNER/REPO)
-[![CI Tests](https://github.com/High-Performance-IO/PyCAPIO/actions/workflows/ci.yml/badge.svg)](https://github.com/High-Performance-IO/PyCAPIO/actions)
+[![CI Tests](https://github.com/High-Performance-IO/PyCAPIO/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/High-Performance-IO/PyCAPIO/actions)
 
 [![PyPI version](https://img.shields.io/pypi/v/pycapio.svg)](https://pypi.org/project/pycapio/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/pycapio.svg)](https://pypi.org/project/pycapio/)

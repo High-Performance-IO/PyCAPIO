@@ -1,6 +1,6 @@
 [project]
 name = "pycapio"
-version = "0.0.1"
+dynamic = ["version"]
 description = "Python interface library for the libcapio library"
 authors = [{ name = "Marco Edoardo Santimaria", email = "marcoedoardo.santimaria@unito.it" }]
 
@@ -25,6 +25,13 @@ Source = "https://github.com/high-performance-io/libcapio"
 
 [project.scripts]
 pycapio = "pycapio.__main__:main"
+
+[tool.scikit-build.metadata.version]
+provider = "scikit_build_core.metadata.regex"
+input = "CMakeLists.txt"
+regex = "(?m)VERSION\\s+(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
+result = "{major}.{minor}.{patch}"
+
 
 [tool.scikit-build]
 cmake.version = ">=3.15"
