@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.15)
-project(PyCAPIO)
+project(PyCAPIO
+        LANGUAGES CXX
+        DESCRIPTION "Native integration of the CAPIO methodology within the python interpreter"
+        VERSION 0.0.1
+)
 
 include(FetchContent)
 include(ExternalProject)
