@@ -7,6 +7,8 @@ include(GNUInstallDirs)
 
 option(CAPIO_LOG "Enable log capabilities within the CAPIO communication queues and libcapio adapter" OFF)
 
+set(CAPIO_RELEASE_TAG "master" CACHE STRING "Default CAPIO tag used to compile PyCAPIO.")
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -27,10 +29,12 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     add_compile_definitions(CAPIO_LOG)
 endif ()
 
+message(STATUS "Using CAPIO on tag ${CAPIO_RELEASE_TAG}")
+
 FetchContent_Declare(
         capio
         GIT_REPOSITORY https://github.com/High-Performance-IO/capio.git
-        GIT_TAG master
+        GIT_TAG ${CAPIO_RELEASE_TAG}
         CMAKE_ARGS
         -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
 )
