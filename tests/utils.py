@@ -17,25 +17,37 @@ def check_shm_cleaned():
     return True
 
 
+def _is_capio_proc(proc):
+    try:
+        name = (proc.info.get("name") or "").lower()
+        if "capio_server" in name:
+            return True
+        cmdline = proc.info.get("cmdline") or []
+        return any("capio_server" in part.lower() for part in cmdline)
+    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+        return False
+
+
 def is_capio_running():
-    for proc in psutil.process_iter(['name']):
-        try:
-            if "capio_server" in proc.info['name'].lower():
-                return True
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            continue
+    for proc in psutil.process_iter(["name", "cmdline"]):
+        if _is_capio_proc(proc):
+            return True
     return False
 
 
 def kill_capio_server():
     procs_to_kill = []
-    for proc in psutil.process_iter(['name']):
-        try:
-            if "capio_server" in proc.info['name'].lower():
+    for proc in psutil.process_iter(["name", "cmdline"]):
+        if _is_capio_proc(proc):
+            try:
                 proc.terminate()
                 procs_to_kill.append(proc)
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            continue
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
     psutil.wait_procs(procs_to_kill)
-    os.remove(f"files_location_{socket.gethostname()}.txt")
+
+    registry = f"files_location_{socket.gethostname()}.txt"
+    if os.path.exists(registry):  # guard: original crashed when absent
+        os.remove(registry)
+
     assert check_shm_cleaned()
