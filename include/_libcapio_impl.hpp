@@ -38,9 +38,9 @@ inline bool syscall_no_intercept_flag;
 
 #include "handlers.hpp"
 
-static thread_local std::string libcapio_preamble;
-static int capio_server_thread_id = -1;
-static bool libcapio_initialized  = false;
+inline bool libcapio_initialized  = false;
+inline int capio_server_thread_id = -1;
+inline thread_local std::string libcapio_preamble;
 
 // -----------------------------------------------------------------------------
 // StartupSemaphore Implementation
