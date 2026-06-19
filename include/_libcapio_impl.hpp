@@ -46,29 +46,29 @@ inline thread_local std::string libcapio_preamble;
 // StartupSemaphore Implementation
 // -----------------------------------------------------------------------------
 
-inline StartupSemaphore::StartupSemaphore(const std::string &workflow_name)
+StartupSemaphore::StartupSemaphore(const std::string &workflow_name)
     : lock_to_check(workflow_name + ".lock") {
     fp = shm_open(lock_to_check.c_str(), O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
 }
 
-inline StartupSemaphore::~StartupSemaphore() {
+StartupSemaphore::~StartupSemaphore() {
     if (fp != -1) {
         close(fp);
         shm_unlink(lock_to_check.c_str());
     }
 }
 
-inline StartupSemaphore::operator bool() const { return fp != -1; }
+StartupSemaphore::operator bool() const { return fp != -1; }
 
 // -----------------------------------------------------------------------------
 // CAPIO Server
 // -----------------------------------------------------------------------------
 
-inline int bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
-                                  const std::string &CAPIO_WORKFLOW_NAME,
-                                  const std::string &capio_server_exec_path,
-                                  const std::string &capio_cl_config,
-                                  const int await_server_timeout_seconds) {
+int bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
+                           const std::string &CAPIO_WORKFLOW_NAME,
+                           const std::string &capio_server_exec_path,
+                           const std::string &capio_cl_config,
+                           const int await_server_timeout_seconds) {
     bool server_is_started = false;
     int server_thread_id   = -1;
 
@@ -162,11 +162,9 @@ inline int bootstrap_capio_server(const std::filesystem::path &CAPIO_DIR,
     return server_thread_id;
 }
 
-inline int libcapio_init(const std::filesystem::path &CAPIO_DIR, const std::string &CAPIO_APP_NAME,
-                         const std::string &CAPIO_WORKFLOW_NAME,
-                         const std::string &capio_server_exec_path,
-                         const std::string &capio_cl_config,
-                         const int await_server_timeout_seconds) {
+int libcapio_init(const std::filesystem::path &CAPIO_DIR, const std::string &CAPIO_APP_NAME,
+                  const std::string &CAPIO_WORKFLOW_NAME, const std::string &capio_server_exec_path,
+                  const std::string &capio_cl_config, const int await_server_timeout_seconds) {
 
     if (libcapio_preamble.empty()) {
         char host_name[HOST_NAME_MAX]{0};
@@ -232,7 +230,7 @@ inline int libcapio_init(const std::filesystem::path &CAPIO_DIR, const std::stri
     return capio_server_thread_id;
 }
 
-inline void libcapio_teardown(const bool teardown_server) {
+void libcapio_teardown(const bool teardown_server) {
     START_LOG(gettid(), "libcapio_teardown()");
     if (libcapio_initialized) {
         exit_handler(NULL, NULL, NULL, NULL, NULL, NULL, NULL);
@@ -250,7 +248,7 @@ inline void libcapio_teardown(const bool teardown_server) {
 // POSIX Syscall Wrappers
 // -----------------------------------------------------------------------------
 
-inline int libcapio_open(const char *path, int flags, mode_t mode) {
+int libcapio_open(const char *path, int flags, mode_t mode) {
     START_LOG(gettid(), "call(path=%s)", path);
     long result;
     openat_handler(AT_FDCWD, reinterpret_cast<long>(path), flags, NULL, NULL, NULL, &result);
@@ -269,7 +267,7 @@ inline int libcapio_open(const char *path, int flags, mode_t mode) {
     return static_cast<int>(result);
 }
 
-inline long libcapio_read(const int fd, char *buf, const size_t size) {
+long libcapio_read(const int fd, char *buf, const size_t size) {
     START_LOG(gettid(), "call(fd=%d, size=%ld)", fd, size);
     long result;
     read_handler(fd, reinterpret_cast<long>(buf), size, NULL, NULL, NULL, &result);
@@ -281,7 +279,7 @@ inline long libcapio_read(const int fd, char *buf, const size_t size) {
     return result;
 }
 
-inline long libcapio_write(const int fd, const char *buf, const size_t size) {
+long libcapio_write(const int fd, const char *buf, const size_t size) {
     START_LOG(gettid(), "call(fd=%d, size=%ld)", fd, size);
     long result;
     write_handler(fd, reinterpret_cast<long>(buf), size, NULL, NULL, NULL, &result);
@@ -293,7 +291,7 @@ inline long libcapio_write(const int fd, const char *buf, const size_t size) {
     return result;
 }
 
-inline long libcapio_close(const int fd) {
+long libcapio_close(const int fd) {
     START_LOG(gettid(), "call(fd=%ld)", fd);
     long result;
     close_handler(fd, NULL, NULL, NULL, NULL, NULL, &result);
@@ -302,7 +300,7 @@ inline long libcapio_close(const int fd) {
     return result;
 }
 
-inline long libcapio_readdir(const int fd, dirent64 *entry) {
+long libcapio_readdir(const int fd, dirent64 *entry) {
     START_LOG(gettid(), "call(fd=%d)", fd);
     long result;
     getdents_handler_impl(fd, reinterpret_cast<long>(entry), sizeof(linux_dirent64), &result, true);
@@ -315,7 +313,7 @@ inline long libcapio_readdir(const int fd, dirent64 *entry) {
     return result;
 }
 
-inline long libcapio_mkdir(const char *path, int mode) {
+long libcapio_mkdir(const char *path, int mode) {
     START_LOG(gettid(), "call(path=%s)", path);
     long result;
     mkdir_handler(reinterpret_cast<long>(path), mode, NULL, NULL, NULL, NULL, &result);
@@ -328,7 +326,7 @@ inline long libcapio_mkdir(const char *path, int mode) {
     return result;
 }
 
-inline long libcapio_lseek(int fd, long offset, int whence) {
+long libcapio_lseek(int fd, long offset, int whence) {
     START_LOG(gettid(), "call(fd=%d, offset=%d, whence=%d)", fd, offset, whence);
     long result;
     lseek_handler(fd, offset, whence, NULL, NULL, NULL, &result);
@@ -341,7 +339,7 @@ inline long libcapio_lseek(int fd, long offset, int whence) {
     return result;
 }
 
-inline long libcapio_stat(const char *path, struct stat *statbuf) {
+long libcapio_stat(const char *path, struct stat *statbuf) {
     START_LOG(gettid(), "call(path=%s)", path);
     long result;
     lstat_handler(reinterpret_cast<long>(path), reinterpret_cast<long>(statbuf), NULL, NULL, NULL,
