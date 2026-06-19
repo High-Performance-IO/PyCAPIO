@@ -6,6 +6,9 @@
 #include "ScandirIteratorWrapper.hpp"
 #include "libcapio.hpp"
 
+// TODO: remove once _libcapio_impl becomes a cpp file
+#include "_libcapio_impl.hpp"
+
 extern int capio_server_thread_id;
 extern bool libcapio_initialized;
 
