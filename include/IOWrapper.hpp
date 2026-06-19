@@ -1,3 +1,8 @@
+// TODO: This file should be split into header and source file. however, it is not yet possible
+//  due to the fact that CAPIO within its POSIX component is a header only target, with global
+//  variables not declared inline. As soon as the POSIX component is refactored, it will be
+//  possible to move this file as a .cpp file
+
 #ifndef LIBCAPIO_IOWRAPPER_HPP
 #define LIBCAPIO_IOWRAPPER_HPP
 #include <cstdint>
@@ -58,7 +63,7 @@ template <IOMode Mode> class IOWrapper {
         const auto write_size = libcapio_write(_file_descriptor, text.data(), text.size());
         if (write_size != static_cast<ssize_t>(text.size())) {
             throw PyCapioException("write failed: received from libcapio offset: " +
-                             std::to_string(write_size));
+                                   std::to_string(write_size));
         }
         return write_size;
     }

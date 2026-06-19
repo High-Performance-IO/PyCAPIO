@@ -1,8 +1,10 @@
-#ifndef LIBCAPIO__CAPIOSCANDIRITERATORWRAPPER_HPP
-#define LIBCAPIO__CAPIOSCANDIRITERATORWRAPPER_HPP
-#include "libcapio.hpp"
+#ifndef LIBCAPIO_SCANDIR_ITERATOR_WRAPPER_HPP
+#define LIBCAPIO_SCANDIR_ITERATOR_WRAPPER_HPP
 
+#include <cstdint>
 #include <dirent.h>
+#include <filesystem>
+#include <string>
 
 class CapioDirEntry {
     std::filesystem::path base_path;
@@ -11,24 +13,14 @@ class CapioDirEntry {
     unsigned char type_;
 
   public:
-    CapioDirEntry(const std::filesystem::path &base, const dirent64 &ent)
-        : base_path(base), name_(ent.d_name), ino_(ent.d_ino), type_(ent.d_type) {}
+    CapioDirEntry(const std::filesystem::path &base, const dirent64 &ent);
 
-    [[nodiscard]] std::string name() const { return name_; }
-
-    [[nodiscard]] std::string path() const { return (base_path / name_).string(); }
-
-    [[nodiscard]] uint64_t inode() const { return ino_; }
-
-    [[nodiscard]] bool is_dir([[maybe_unused]] bool follow_symlinks = true) const {
-        return type_ == DT_DIR;
-    }
-
-    [[nodiscard]] bool is_file([[maybe_unused]] bool follow_symlinks = true) const {
-        return type_ == DT_REG;
-    }
-
-    [[nodiscard]] bool is_symlink() const { return type_ == DT_LNK; }
+    [[nodiscard]] std::string name() const;
+    [[nodiscard]] std::string path() const;
+    [[nodiscard]] uint64_t inode() const;
+    [[nodiscard]] bool is_dir(bool follow_symlinks = true) const;
+    [[nodiscard]] bool is_file(bool follow_symlinks = true) const;
+    [[nodiscard]] bool is_symlink() const;
 };
 
 class ScandirIteratorWrapper {
@@ -37,46 +29,12 @@ class ScandirIteratorWrapper {
     bool finished       = false;
 
   public:
-    ScandirIteratorWrapper(const std::filesystem::path &path) : path(path) {
+    explicit ScandirIteratorWrapper(const std::filesystem::path &path);
+    ~ScandirIteratorWrapper();
 
-        if (!libcapio_initialized) {
-            throw PyCapioException("libcapio not initialized");
-        }
-
-        file_descriptor = libcapio_open(path.string().c_str(), O_RDONLY);
-        if (file_descriptor < 0) {
-            throw PyCapioException("libcapio_open failed");
-        }
-    }
-
-    ~ScandirIteratorWrapper() { close(); }
-
-    CapioDirEntry next() {
-        if (finished) {
-            throw pybind11::stop_iteration();
-        }
-
-        dirent64 ent{};
-        if (libcapio_readdir(file_descriptor, &ent) == 0) {
-            finished = true;
-            throw pybind11::stop_iteration();
-        }
-
-        if (strcmp(ent.d_name, ".") == 0 || strcmp(ent.d_name, "..") == 0) {
-            return next();
-        }
-
-        return {path, ent};
-    }
-
-    ScandirIteratorWrapper &iter() { return *this; }
-
-    void close() {
-        if (file_descriptor != -1) {
-            libcapio_close(file_descriptor);
-            file_descriptor = -1;
-        }
-    }
+    CapioDirEntry next();
+    ScandirIteratorWrapper &iter();
+    void close();
 };
 
-#endif // LIBCAPIO__CAPIOSCANDIRITERATORWRAPPER_HPP
+#endif // LIBCAPIO_SCANDIR_ITERATOR_WRAPPER_HPP

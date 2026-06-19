@@ -1,13 +1,13 @@
-#include "../include/libcapio.hpp"
-#include "pybind11/pybind11.h"
+#include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/stl/filesystem.h>
 
-#include "../include/PyCapioException.hpp"
+#include "_libcapio_impl.hpp"
 
-#include "../include/IOWrapper.hpp"
-#include "../include/OsPath.hpp"
-#include "../include/ScandirIteratorWrapper.hpp"
+#include "IOWrapper.hpp"
+#include "OsPath.hpp"
+#include "PyCapioException.hpp"
+#include "ScandirIteratorWrapper.hpp"
 
 namespace py11 = pybind11;
 
@@ -66,6 +66,8 @@ PYBIND11_MODULE(_pycapio, m) {
     register_IO_wrapper<IOMode::Text>(m, "PyCapioTextIOWrapper", 4096);
 
     register_IO_wrapper<IOMode::Binary>(m, "PyCapioBinaryIOWrapper", 16 * 1024);
+
+    pybind11::register_exception<PyCapioException>(m, "PyCAPIOException");
 
     py11::class_<CapioDirEntry>(m, "DirEntry")
         .def_property_readonly("name", &CapioDirEntry::name)
