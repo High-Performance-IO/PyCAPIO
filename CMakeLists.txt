@@ -62,7 +62,9 @@ install(
 # PYBIND11 TARGET
 ########################
 
-pybind11_add_module(_pycapio src/pycapio.cpp)
+file(GLOB PYCAPIO_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
+
+pybind11_add_module(_pycapio ${PYCAPIO_SOURCES})
 
 # patch server_println by copying server_println.hpp from server/utils/server_println.hpp to posix/utils/server_println.hpp
 file(COPY "${capio_SOURCE_DIR}/capio/server/include/utils/server_println.hpp"
@@ -70,12 +72,14 @@ file(COPY "${capio_SOURCE_DIR}/capio/server/include/utils/server_println.hpp"
 message(WARNING "WARN: patch for server_println.hpp copied to posix has been applied!")
 
 target_compile_definitions(_pycapio PRIVATE PYCAPIO_BINDINGS)
+target_compile_definitions(_pycapio PRIVATE CAPIO_VERSION="${CMAKE_PROJECT_VERSION}")
 
 message(STATUS "CAPIO_PREFIX = ${capio_SOURCE_DIR}")
 
 target_include_directories(_pycapio PRIVATE
         ${capio_SOURCE_DIR}/capio
         ${capio_SOURCE_DIR}/capio/posix
+        ${CMAKE_SOURCE_DIR}/include
 )
 
 target_compile_options(
