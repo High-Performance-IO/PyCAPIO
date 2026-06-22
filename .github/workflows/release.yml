@@ -125,6 +125,7 @@ jobs:
 
   build-docs:
     name: Build documentation
+    needs: [check-tag-existance]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
