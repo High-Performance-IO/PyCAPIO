@@ -1,0 +1,3 @@
+/* Small tweaks on top of the Furo theme. */
+.wy-table-responsive table td { white-space: normal; }
+code.literal { font-size: 0.85em; }
