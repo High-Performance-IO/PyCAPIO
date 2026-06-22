@@ -7,8 +7,26 @@
 #define LIBCAPIO_IOWRAPPER_HPP
 #include <cstdint>
 
-enum class IOMode { Text, Binary };
+/**
+ * @brief Stream interpretation used by @ref IOWrapper.
+ */
+enum class IOMode { Text /**< Decode reads/writes as @c str. */,
+                    Binary /**< Treat reads/writes as raw @c bytes. */ };
 
+/**
+ * @brief File-like wrapper around a CAPIO stream.
+ *
+ * Implements the Python file-object protocol (@c read, @c readline,
+ * @c readlines, @c write, @c writelines, @c seek, @c flush, @c close,
+ * iteration and context-manager support) on top of a CAPIO file descriptor.
+ *
+ * The @ref IOMode template parameter selects the element type: @c Text wrappers
+ * return @c std::string (Python @c str), while @c Binary wrappers return
+ * @c pybind11::bytes. The two instantiations are exposed to Python as
+ * @c PyCapioTextIOWrapper and @c PyCapioBinaryIOWrapper respectively.
+ *
+ * @tparam Mode Stream interpretation, see @ref IOMode.
+ */
 template <IOMode Mode> class IOWrapper {
 
     const int _file_descriptor = -1;
