@@ -1,0 +1,43 @@
+# Doxyfile for PyCAPIO — tuned to feed Breathe (XML) and provide a standalone
+# C++ HTML reference. Run from the docs/ directory:  doxygen Doxyfile
+
+PROJECT_NAME           = "PyCAPIO"
+PROJECT_BRIEF          = "Native C++/pybind11 layer of PyCAPIO"
+OUTPUT_DIRECTORY       = doxygen
+
+# Parse the public headers and their implementations.
+INPUT                  = ../include ../src
+FILE_PATTERNS          = *.hpp *.h *.cpp
+RECURSIVE              = YES
+
+# We document the public interface; private members are surfaced by Breathe
+# only where requested.
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+HIDE_UNDOC_MEMBERS     = NO
+
+# Breathe consumes the XML output.
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+XML_PROGRAMLISTING     = YES
+
+# A standalone HTML C++ reference is handy on its own; disable if not wanted.
+GENERATE_HTML          = YES
+HTML_OUTPUT            = html
+GENERATE_LATEX         = NO
+
+# C++ niceties.
+BUILTIN_STL_SUPPORT    = YES
+TEMPLATE_RELATIONS     = YES
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+MARKDOWN_SUPPORT       = YES
+SORT_MEMBER_DOCS       = NO
+
+# Keep the log readable.
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+
+# The CAPIO headers pulled in transitively are not part of our public API.
+EXCLUDE_PATTERNS       = */common/* */_libcapio_impl.hpp

@@ -1,9 +1,3 @@
-# Minimal makefile for PyCAPIO documentation.
-# Usage:
-#   make html   -> Doxygen XML + HTML site in _build/html
-#   make pdf     -> Doxygen XML + PDF in _build/latex/pycapio.pdf
-#   make clean   -> remove generated output
-
 SPHINXBUILD ?= sphinx-build
 SOURCEDIR   = source
 BUILDDIR    = _build

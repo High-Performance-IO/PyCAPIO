@@ -40,17 +40,6 @@ build even without Doxygen — only the C++ pages will be empty.
 > it so `autodoc` can import the pure-Python modules anywhere. The native
 > classes are documented from the C++ sources instead.
 
-## Publishing
-
-Two ready-to-use options are included:
-
-- **GitHub Pages** — `.github/workflows/docs.yml` builds the HTML (and a PDF,
-  copied to `pycapio.pdf` at the site root) on every push to `main` and deploys
-  it. Enable it under *Settings → Pages → Build and deployment → Source:
-  GitHub Actions*.
-- **Read the Docs** — `.readthedocs.yaml` builds HTML, PDF and ePub. Import the
-  repository at <https://readthedocs.org> and it works out of the box.
-
 ## Writing docstrings
 
 Python docstrings use the [Google style](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
