@@ -1,6 +1,5 @@
 # PyCAPIO
 
-[![codecov](https://img.shields.io/codecov/c/github/High-Performance-IO/PyCAPIO?logo=codecov)](https://codecov.io/gh/High-Performance-IO/PyCAPIO)
 [![CI Tests](https://img.shields.io/github/actions/workflow/status/High-Performance-IO/PyCAPIO/ci_cd.yml?logo=githubactions&label=CI%20Tests)](https://github.com/High-Performance-IO/PyCAPIO/actions)
 [![PyPI version](https://img.shields.io/pypi/v/pycapio.svg?logo=pypi)](https://pypi.org/project/pycapio/)
 ![Python](https://img.shields.io/badge/dynamic/regex?url=https%3A%2F%2Fraw.githubusercontent.com%2FHigh-Performance-IO%2FPyCAPIO%2Frefs%2Fheads%2Fmain%2Fpyproject.toml&search=requires-python%20%3D%20%22%28%5B%5E%22%5D%2B%29%22&replace=%241&label=Python&logo=python)
@@ -42,7 +41,7 @@ pip install pycapio
 To build and install PyCAPIO from the source repository:
 
 ```bash
-git clone [https://github.com/High-Performance-IO/PyCAPIO.git](https://github.com/High-Performance-IO/PyCAPIO.git)
+git clone https://github.com/High-Performance-IO/PyCAPIO.git
 cd PyCAPIO
 python3 -m venv venv
 source venv/bin/activate
@@ -83,9 +82,7 @@ pip install .
 
 # Important Notes
 
-[!IMPORTANT] PyCAPIO natively intercepts I/O operations that use Python's built-in methods. If your script relies on
-external libraries compiled into shared objects (.so files), please bypass Python-level interception and use the
-standard LD_PRELOAD approach for CAPIO instead.
+>[!IMPORTANT] PyCAPIO natively intercepts I/O operations that use Python's built-in methods. If your script relies on external libraries compiled into shared objects (.so files), please bypass Python-level interception and use the standard LD_PRELOAD approach for CAPIO instead.
 
 # Team
 
