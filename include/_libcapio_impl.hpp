@@ -261,7 +261,8 @@ void libcapio_teardown(const bool teardown_server) {
 
 int libcapio_open(const char *path, int flags, mode_t mode) {
     START_LOG(gettid(), "call(path=%s)", path);
-    long result;
+    // handlers delegating the call to the kernel do not set result
+    long result = CAPIO_POSIX_SYSCALL_REQUEST_SKIP;
     openat_handler(AT_FDCWD, reinterpret_cast<long>(path), flags, NULL, NULL, NULL, &result);
     LOG("open_handler result = %d", result);
 
@@ -280,7 +281,8 @@ int libcapio_open(const char *path, int flags, mode_t mode) {
 
 long libcapio_read(const int fd, char *buf, const size_t size) {
     START_LOG(gettid(), "call(fd=%d, size=%ld)", fd, size);
-    long result;
+    // handlers delegating the call to the kernel do not set result
+    long result = CAPIO_POSIX_SYSCALL_REQUEST_SKIP;
     read_handler(fd, reinterpret_cast<long>(buf), size, NULL, NULL, NULL, &result);
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         return read(fd, buf, size);
@@ -292,7 +294,8 @@ long libcapio_read(const int fd, char *buf, const size_t size) {
 
 long libcapio_write(const int fd, const char *buf, const size_t size) {
     START_LOG(gettid(), "call(fd=%d, size=%ld)", fd, size);
-    long result;
+    // handlers delegating the call to the kernel do not set result
+    long result = CAPIO_POSIX_SYSCALL_REQUEST_SKIP;
     write_handler(fd, reinterpret_cast<long>(buf), size, NULL, NULL, NULL, &result);
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
         return write(fd, buf, size);
@@ -304,8 +307,12 @@ long libcapio_write(const int fd, const char *buf, const size_t size) {
 
 long libcapio_close(const int fd) {
     START_LOG(gettid(), "call(fd=%ld)", fd);
-    long result;
+    // handlers delegating the call to the kernel do not set result
+    long result = CAPIO_POSIX_SYSCALL_REQUEST_SKIP;
     close_handler(fd, NULL, NULL, NULL, NULL, NULL, &result);
+    if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
+        return close(fd);
+    }
 
     LOG("\n\n");
     return result;
@@ -313,7 +320,8 @@ long libcapio_close(const int fd) {
 
 long libcapio_readdir(const int fd, dirent64 *entry) {
     START_LOG(gettid(), "call(fd=%d)", fd);
-    long result;
+    // handlers delegating the call to the kernel do not set result
+    long result = CAPIO_POSIX_SYSCALL_REQUEST_SKIP;
     getdents_handler_impl(fd, reinterpret_cast<long>(entry), sizeof(linux_dirent64), &result, true);
 
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
@@ -326,7 +334,8 @@ long libcapio_readdir(const int fd, dirent64 *entry) {
 
 long libcapio_mkdir(const char *path, int mode) {
     START_LOG(gettid(), "call(path=%s)", path);
-    long result;
+    // handlers delegating the call to the kernel do not set result
+    long result = CAPIO_POSIX_SYSCALL_REQUEST_SKIP;
     mkdir_handler(reinterpret_cast<long>(path), mode, NULL, NULL, NULL, NULL, &result);
 
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
@@ -339,11 +348,12 @@ long libcapio_mkdir(const char *path, int mode) {
 
 long libcapio_lseek(int fd, long offset, int whence) {
     START_LOG(gettid(), "call(fd=%d, offset=%d, whence=%d)", fd, offset, whence);
-    long result;
+    // handlers delegating the call to the kernel do not set result
+    long result = CAPIO_POSIX_SYSCALL_REQUEST_SKIP;
     lseek_handler(fd, offset, whence, NULL, NULL, NULL, &result);
 
     if (result == CAPIO_POSIX_SYSCALL_REQUEST_SKIP) {
-        throw PyCapioException("ERROR: libcapio readdir on non CAPIO directory not yet supported");
+        return lseek(fd, offset, whence);
     }
 
     LOG("\n\n");
@@ -352,7 +362,8 @@ long libcapio_lseek(int fd, long offset, int whence) {
 
 long libcapio_stat(const char *path, struct stat *statbuf) {
     START_LOG(gettid(), "call(path=%s)", path);
-    long result;
+    // handlers delegating the call to the kernel do not set result
+    long result = CAPIO_POSIX_SYSCALL_REQUEST_SKIP;
     lstat_handler(reinterpret_cast<long>(path), reinterpret_cast<long>(statbuf), NULL, NULL, NULL,
                   NULL, &result);
 
