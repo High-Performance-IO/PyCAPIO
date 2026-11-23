@@ -66,10 +66,28 @@ file(GLOB PYCAPIO_SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
 pybind11_add_module(_pycapio ${PYCAPIO_SOURCES})
 
-# patch server_println by copying server_println.hpp from server/utils/server_println.hpp to posix/utils/server_println.hpp
-file(COPY "${capio_SOURCE_DIR}/capio/server/include/utils/server_println.hpp"
-        DESTINATION "${capio_SOURCE_DIR}/capio/posix/utils/")
-message(WARNING "WARN: patch for server_println.hpp copied to posix has been applied!")
+# Older CAPIO releases (before the CALF logger refactor, CAPIO#239) kept server_println.hpp in the
+# server tree only, while the posix headers included it: copy it over for those releases only.
+set(_capio_server_println "${capio_SOURCE_DIR}/capio/server/include/utils/server_println.hpp")
+if (EXISTS "${_capio_server_println}")
+    file(COPY "${_capio_server_println}" DESTINATION "${capio_SOURCE_DIR}/capio/posix/utils/")
+    message(WARNING "WARN: patch for server_println.hpp copied to posix has been applied!")
+else ()
+    # Newer CAPIO releases log through CALF, and their posix headers expect __CAPIO_POSIX to be
+    # defined (logger selection, syscall_intercept primitives). Build the bindings like CAPIO
+    # builds its posix library, with include/compat standing in for syscall_intercept, which
+    # PyCAPIO does not need since it calls the handlers directly instead of hooking syscalls.
+    target_compile_definitions(_pycapio PRIVATE __CAPIO_POSIX)
+    target_include_directories(_pycapio PRIVATE ${CMAKE_SOURCE_DIR}/include/compat)
+
+    set(_pycapio_log_enabled FALSE)
+    if (CAPIO_LOG AND CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(_pycapio_log_enabled TRUE)
+    endif ()
+    calf_enable_log(_pycapio ${_pycapio_log_enabled})
+    calf_set_component(_pycapio "pycapio")
+    calf_set_default_log_dir(_pycapio "./capio_logs")
+endif ()
 
 target_compile_definitions(_pycapio PRIVATE PYCAPIO_BINDINGS)
 target_compile_definitions(_pycapio PRIVATE CAPIO_VERSION="${CMAKE_PROJECT_VERSION}")

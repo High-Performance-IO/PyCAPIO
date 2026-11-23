@@ -1,25 +1,13 @@
 import os
 import socket
 
-import psutil
 import pytest
 
-from utils import is_capio_running
+from utils import is_capio_running, terminate_capio_servers
 
-
-def _terminate_capio_servers():
-    killed = []
-    for proc in psutil.process_iter(["name", "cmdline"]):
-        try:
-            name = (proc.info.get("name") or "").lower()
-            cmdline = " ".join(proc.info.get("cmdline") or []).lower()
-            if "capio_server" in name or "capio_server" in cmdline:
-                proc.terminate()
-                killed.append(proc)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            continue
-    if killed:
-        psutil.wait_procs(killed, timeout=10)
+# Exported by libcapio_init only when unset: clear them between tests, otherwise the workflow
+# and app names of a test leak into the following ones.
+_CAPIO_ENV_VARS = ("CAPIO_DIR", "CAPIO_WORKFLOW_NAME", "CAPIO_APP_NAME")
 
 
 def _remove_files_location():
@@ -48,8 +36,11 @@ def force_cleanup():
         pass
     pycapio.py_capio_initialized = False
 
-    _terminate_capio_servers()
+    terminate_capio_servers(timeout=10)
     _remove_files_location()
+
+    for var in _CAPIO_ENV_VARS:
+        os.environ.pop(var, None)
 
 
 @pytest.fixture
