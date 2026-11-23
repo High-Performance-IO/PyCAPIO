@@ -20,8 +20,12 @@
  * if -1, and capio logging is enable everything is logged, otherwise, only
  * logs up to CAPIO_MAX_LOG_LEVEL function calls
  */
+#ifndef __CAPIO_POSIX
+// CAPIO < CAPIO#239: emulate the syscall_intercept primitives used by the posix headers. Newer
+// releases are built with __CAPIO_POSIX and get them from common/syscall.hpp and include/compat.
 inline bool syscall_no_intercept_flag;
 #define syscall_no_intercept syscall
+#endif
 
 #include "libcapio.hpp"
 
@@ -34,7 +38,12 @@ inline bool syscall_no_intercept_flag;
 #include "utils/filesystem.hpp"
 #include "utils/snapshot.hpp"
 
+// CAPIO < CAPIO#239 shipped its own logger; newer releases log through CALF.
+#if __has_include("common/logger.hpp")
 #include "common/logger.hpp"
+#else
+#include "calf/SyscallLogger.h"
+#endif
 
 #include "handlers.hpp"
 
@@ -211,7 +220,9 @@ int libcapio_init(const std::filesystem::path &CAPIO_DIR, const std::string &CAP
     init_filesystem();
     initialize_new_thread();
 
+#ifdef START_SYSCALL_LOGGING
     START_SYSCALL_LOGGING();
+#endif
 
     if (const auto silent = std::getenv("SILENT");
         silent != nullptr && std::string(silent) == "OFF") {
