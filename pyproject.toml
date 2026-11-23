@@ -38,7 +38,7 @@ cmake.version = ">=3.15"
 wheel.packages = ["pycapio"]
 
 [tool.scikit-build.cmake.define]
-CAPIO_RELEASE_TAG = "674475cd45f47e5a65f7b4d37b9f2a803af5f276"
+CAPIO_RELEASE_TAG = "f1e9114df1a983978f72dc2ae1802eb2df38a8ab"
 CMAKE_BUILD_TYPE = "Release"
 CAPIO_LOG = "OFF"
 CAPIO_BUILD_POSIX = "OFF"
